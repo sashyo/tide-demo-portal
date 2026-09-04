@@ -121,21 +121,6 @@
 }
 .dm-net-head em { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 12px; }
 
-/* Capped, and centred. At 1fr each the dots filled the panel and read as a row of buttons
-   rather than as a network of machines somewhere else. */
-.dm-nodes {
-  display: grid; grid-template-columns: repeat(10, 22px); gap: 10px;
-  padding: 18px 14px; justify-content: center;
-}
-@media (max-width: 520px) { .dm-nodes { grid-template-columns: repeat(5, 22px); } }
-.dm-node {
-  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--edge);
-  background: var(--panel);
-  transition: background .2s, border-color .2s, transform .2s;
-}
-.dm-node-busy { border-color: var(--accent); animation: dmPulse .8s ease-in-out infinite; }
-.dm-node-no { background: hsl(2 62% 52%); border-color: hsl(2 62% 52%); transform: scale(1.12); }
-.dm-node-ok { background: hsl(152 50% 40%); border-color: hsl(152 50% 40%); transform: scale(1.12); }
 
 .dm-log {
   font-family: var(--mono); font-size: 11.5px; line-height: 1.75; color: var(--ink-2);
@@ -171,3 +156,156 @@
   color: hsl(152 55% 26%); background: hsl(152 45% 96.5%); border-color: hsl(152 40% 80%);
 }
 .dm-world em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; opacity: .8; }
+
+/* --- leaving the app ------------------------------------------------------- */
+/* The crossing used to be one quiet line of text, so the most important moment in the demo
+   read as a status update. It is now spatial: two labelled places, a packet that visibly
+   travels between them, and everything drawn afterwards sitting on a different surface so
+   the reader can see they are no longer looking at the app. */
+.dm-cross {
+  display: grid; grid-template-columns: 1fr 64px 1fr; align-items: stretch; gap: 0;
+  margin: 4px 0;
+}
+.dm-place {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--panel);
+}
+.dm-place b { display: block; font-size: 13.5px; }
+.dm-place span { display: block; font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.dm-place-here { border-style: solid; }
+.dm-place-there {
+  background: hsl(215 30% 15%); border-color: hsl(215 25% 26%); color: #fff;
+}
+.dm-place-there span { color: hsl(215 18% 68%); }
+
+/* The gap between them, and the packet crossing it. */
+.dm-track { position: relative; display: grid; place-items: center; }
+.dm-track::before {
+  content: ""; position: absolute; left: 4px; right: 4px; height: 1px;
+  background: repeating-linear-gradient(90deg, var(--edge) 0 4px, transparent 4px 8px);
+}
+.dm-packet {
+  width: 10px; height: 10px; border-radius: 50%; background: var(--accent);
+  position: relative; transform: translateX(-22px); opacity: 0;
+  transition: transform .95s cubic-bezier(.5,0,.5,1), opacity .2s;
+}
+.dm-cross-go .dm-packet { transform: translateX(22px); opacity: 1; }
+.dm-cross-done .dm-packet { opacity: 0; }
+.dm-cross-go .dm-place-there { box-shadow: 0 0 0 3px hsl(215 40% 60% / .25); }
+
+/* Once the request has left, everything is drawn on the other side's surface. */
+.dm-net {
+  border: 1px solid hsl(215 25% 26%); border-radius: 12px; overflow: hidden;
+  background: hsl(215 30% 15%); color: hsl(215 16% 84%);
+}
+.dm-net .dm-net-head {
+  background: hsl(215 28% 19%); border-bottom-color: hsl(215 25% 26%); color: hsl(215 18% 66%);
+}
+.dm-net .dm-log { color: hsl(215 16% 72%); }
+.dm-net .dm-log b { color: #fff; }
+.dm-net .dm-log .dim { color: hsl(215 14% 52%); }
+.dm-net .dm-log .no { color: hsl(2 70% 70%); }
+.dm-net .dm-tally { background: hsl(215 28% 19%); border-top-color: hsl(215 25% 26%); }
+.dm-net .dm-tally span { color: hsl(215 16% 68%); }
+.dm-net-foot {
+  padding: 10px 14px; border-top: 1px solid hsl(215 25% 26%);
+  font-size: 12px; color: hsl(215 16% 62%);
+}
+
+/* --- an actual chat window ------------------------------------------------- */
+/* The agent conversation was a stack of labelled boxes, which read as a transcript in a
+   report. It has to look like the thing people actually talk to, because the demo depends on
+   the viewer recognising the situation: you are chatting to a bot and the bot agrees with you. */
+.dm-chat {
+  border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel);
+}
+.dm-chat-head {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  border-bottom: 1px solid var(--line); background: var(--panel-2);
+}
+.dm-bot-face {
+  width: 30px; height: 30px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: var(--accent); color: #fff; font-size: 14px;
+}
+.dm-chat-head b { font-size: 13.5px; flex: 1; }
+.dm-chat-head i {
+  font-style: normal; font-size: 11.5px; color: hsl(152 45% 34%);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.dm-chat-head i::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: hsl(152 50% 42%);
+}
+
+.dm-thread {
+  padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  min-height: 230px; max-height: 320px; overflow-y: auto;
+}
+.dm-turn { display: flex; gap: 9px; align-items: flex-end; animation: dmIn .22s ease; }
+.dm-turn-user { flex-direction: row-reverse; }
+.dm-turn .dm-bot-face { width: 24px; height: 24px; font-size: 12px; }
+.dm-bubble {
+  max-width: 78%; padding: 10px 13px; border-radius: 14px; font-size: 13.5px; line-height: 1.5;
+}
+.dm-turn-bot .dm-bubble {
+  background: var(--panel-2); border: 1px solid var(--line); border-bottom-left-radius: 4px;
+}
+.dm-turn-user .dm-bubble {
+  background: var(--accent); color: #fff; border-bottom-right-radius: 4px;
+}
+.dm-turn-user .dm-bubble strong { color: #fff; }
+.dm-stamp { font-size: 10.5px; color: var(--ink-3); flex: none; align-self: flex-end; }
+
+/* Three dots, because that is what everybody has been trained to wait for. */
+.dm-typing { display: flex; gap: 4px; padding: 12px 14px; }
+.dm-typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3);
+  animation: dmBounce 1.1s ease-in-out infinite;
+}
+.dm-typing span:nth-child(2) { animation-delay: .15s; }
+.dm-typing span:nth-child(3) { animation-delay: .3s; }
+@keyframes dmBounce { 0%,60%,100% { opacity: .3; transform: translateY(0) } 30% { opacity: 1; transform: translateY(-3px) } }
+
+/* What the bot is doing while the dots bounce. Not part of the conversation, so it is not a
+   bubble: the point is that the customer never sees this and it agrees with them anyway. */
+.dm-trace {
+  margin: 2px 0 2px 33px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3);
+  animation: dmIn .2s ease;
+}
+.dm-trace::before { content: "reasoning  "; color: var(--edge); }
+
+.dm-chat-input {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  border-top: 1px solid var(--line); background: var(--panel-2);
+  font-size: 13px; color: var(--ink-3);
+}
+.dm-chat-input span { flex: 1; }
+.dm-chat-input b {
+  font-size: 12.5px; font-weight: 600; color: var(--ink-3);
+  border: 1px solid var(--edge); border-radius: 999px; padding: 5px 13px; background: var(--panel);
+}
+
+/* --- the network, drawn as a network --------------------------------------- */
+/* A hub with a line to every node, on a ring. The grid of squares it replaces looked like a
+   UI component; this looks like machines in other places, and the lines make one request
+   reaching all of them at once legible in a single frame. */
+.dm-graph { display: block; width: 100%; height: auto; padding: 6px 10px 0; }
+.dm-hub { fill: hsl(200 80% 60%); }
+.dm-hub-label {
+  fill: hsl(215 16% 62%); font-size: 11px; text-anchor: middle;
+  font-family: var(--mono);
+}
+.dm-wire { stroke: hsl(215 22% 30%); stroke-width: 1; opacity: .5; }
+.dm-sending .dm-wire { animation: dmWire .9s ease-out; opacity: 1; }
+@keyframes dmWire {
+  from { stroke: hsl(200 80% 62%); stroke-width: 2.5; }
+  to   { stroke: hsl(215 22% 30%); stroke-width: 1; }
+}
+.dm-wire-no { stroke: hsl(2 60% 45%); opacity: .85; }
+.dm-wire-ok { stroke: hsl(150 45% 42%); opacity: .85; }
+.dm-orb {
+  fill: hsl(215 28% 22%); stroke: hsl(215 20% 38%); stroke-width: 1.5;
+  transition: fill .2s, stroke .2s;
+}
+.dm-sending .dm-orb { animation: dmOrb 1.2s ease-in-out infinite; }
+@keyframes dmOrb { 0%,100% { stroke: hsl(215 20% 38%) } 50% { stroke: hsl(200 70% 58%) } }
+.dm-orb-no { fill: hsl(2 65% 52%); stroke: hsl(2 65% 62%); animation: none !important; }
+.dm-orb-ok { fill: hsl(150 50% 42%); stroke: hsl(150 50% 55%); animation: none !important; }
