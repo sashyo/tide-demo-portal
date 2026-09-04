@@ -1,4 +1,4 @@
-import { clientLog, forceRelogin, initTide, isPopupBlocked, POPUP_HELP, IAMService } from './tide.js';
+import { clientLog, initTide, isPopupBlocked, POPUP_HELP, IAMService } from './tide.js';
 import { Models } from '@tideorg/js';
 import { PolicySignRequest } from 'heimdall-tide';
 
@@ -9,9 +9,12 @@ const { Policy, ApprovalType, ExecutionType, BaseTideRequest } = Models;
  *
  * The ordering is not adjustable:
  *
- *   link account -> GRANT tide-realm-admin -> publish contracts -> sign both policies
+ *   link account -> GRANT tide-realm-admin (server side) -> sign in -> sign both policies
  *
- * The grant comes first because signing a policy depends on it. The ceremony attaches the
+ * The grant happens on the way back from linking, in /onboard/complete, before this page has
+ * a session at all. That is what keeps setup down to a single login prompt: the first token
+ * already carries the role. The block below is only the fallback for when that call did not
+ * land. The grant comes first because signing a policy depends on it. The ceremony attaches the
  * signed `tide-realm-admin` role policy to the approved request, and the ORKs check the
  * signature against it. Run it while the realm is still firstAdmin and there is no such
  * grant to check against, so the run dies at "Collecting threshold signatures" with nothing
@@ -32,8 +35,6 @@ const { Policy, ApprovalType, ExecutionType, BaseTideRequest } = Models;
  */
 const $ = (id) => document.getElementById(id);
 
-/** Set when we have already re-logged in once to pick up the role. Stops a redirect loop. */
-const RELOGIN_FOR_ROLE = 'tide_setup_relogin_for_role';
 
 /** Append a log line. A developer surface shows a trail, not a single replaced sentence. */
 function log(msg, cls) {
@@ -97,61 +98,39 @@ async function run() {
     const tc = IAMService.getTideCloakClient();
     if (!tc) throw new Error('Tide client not ready — reload and sign in again.');
 
-    // The flip, first. Everything below signs against the tide-realm-admin policy, which does
-    // not exist to sign against until this has committed.
-    say('Granting tide-realm-admin…');
-    const fin = await fetch('/onboard/finalize', { method: 'POST' });
-    const done = await fin.json();
-    if (!fin.ok || done.status === 'failed') throw new Error(done.error || 'Finalising failed.');
-    step('s-admin', 'done');
-    log('tide-realm-admin granted, workspace is now multiAdmin', 'ok');
+    /* The grant normally happened on the way back from linking, before this page had a
+     * session, so the token in hand already carries tide-realm-admin and there is nothing to
+     * do here. This is the fallback for when that call did not land: grant, then check.
+     *
+     * There is no re-login in this path any more. A token minted before the grant cannot be
+     * repaired by refreshing it, so the honest move when the role is missing is to say so and
+     * let the visitor sign in once, rather than bounce them through a second prompt that the
+     * flow should never have needed. */
+    if (!IAMService.hasRealmRole('tide-realm-admin')) {
+      say('Granting tide-realm-admin…');
+      const fin = await fetch('/onboard/finalize', { method: 'POST' });
+      const done = await fin.json();
+      if (!fin.ok || done.status === 'failed') throw new Error(done.error || 'Finalising failed.');
+      log('tide-realm-admin granted, workspace is now multiAdmin', 'ok');
 
-    /* The token in this browser was minted before the grant, so it does not carry the role.
-     *
-     * The ORKs re-derive a JWT's claims from the current user context rather than trusting
-     * what the app sends, so a token issued a minute ago describes a user who was not an
-     * admin yet. Signing a policy with it fails at the threshold step with nothing useful to
-     * say, which is what it did. Force a refresh and check the role actually arrived instead
-     * of assuming it.
-     *
-     * The retry is for propagation: the grant is a governed change and the commit has to land
-     * before a refreshed token reflects it. */
-    say('Refreshing your token with the new role…');
-    let isAdmin = false;
-    for (let attempt = 1; attempt <= 4 && !isAdmin; attempt++) {
-      try {
-        await IAMService.updateToken();
-      } catch (err) {
-        clientLog('warn', 'token refresh failed on attempt ' + attempt, String(err));
+      say('Picking up the new role…');
+      let isAdmin = false;
+      for (let attempt = 1; attempt <= 3 && !isAdmin; attempt++) {
+        try {
+          await IAMService.updateToken();
+        } catch (err) {
+          clientLog('warn', 'token refresh failed on attempt ' + attempt, String(err));
+        }
+        isAdmin = IAMService.hasRealmRole('tide-realm-admin');
+        if (!isAdmin) await new Promise((r) => setTimeout(r, attempt * 1200));
       }
-      isAdmin = IAMService.hasRealmRole('tide-realm-admin');
-      if (!isAdmin) await new Promise((r) => setTimeout(r, attempt * 1200));
-    }
-    if (!isAdmin) {
-      /* A refresh was not enough, so take a new token the only way that reliably works.
-       *
-       * The grant regenerates the user contexts and re-seals the authorization surface. A
-       * refresh exchange does not always come back describing the new one, and the ORKs sign
-       * against what they re-derive, not against what this page believes. A fresh login mints
-       * a token from the current state.
-       *
-       * The page comes back to itself and starts again. Granting is idempotent, so the second
-       * pass walks straight through it and on to the contracts. The guard is there because a
-       * re-login that does not fix it must not become a redirect loop: fail once, in words. */
-      let alreadyTried = false;
-      try { alreadyTried = sessionStorage.getItem(RELOGIN_FOR_ROLE) === '1'; } catch {}
-      if (!alreadyTried) {
-        try { sessionStorage.setItem(RELOGIN_FOR_ROLE, '1'); } catch {}
-        log('token still lacks the role, signing in again for a fresh one', 'warn');
-        say('Signing you in again to pick up the new role…');
-        if (forceRelogin('tide-realm-admin granted after this token was issued')) return;
+      if (!isAdmin) {
+        throw new Error('The grant went through, but this token was issued before it and does '
+          + 'not carry the role. Sign out and back in, then reopen this page: the grant is '
+          + 'already done, so it will go straight to signing the policies.');
       }
-      throw new Error('Your session still does not carry tide-realm-admin after signing in '
-        + 'again. The grant itself went through, so the workspace is usable; the policies can '
-        + 'be signed from this page once the role appears on your token.');
     }
-    try { sessionStorage.removeItem(RELOGIN_FOR_ROLE); } catch {}
-    log('token refreshed, now carries tide-realm-admin', 'ok');
+    step('s-admin', 'done');
 
     say('Publishing the encryption contracts…');
     const clinic = await buildPolicy(tc, '/clinic/api/policy/prepare', cfg.adapter.vendorId, {

@@ -259,7 +259,7 @@ export function setupPage(realm: string): string {
 
   <ol class="dev-plan">
     <li id="s-link" data-state="done">link tide account</li>
-    <li id="s-admin" data-state="todo">grant tide-realm-admin <em>irreversible</em></li>
+    <li id="s-admin" data-state="done">grant tide-realm-admin <em>irreversible</em></li>
     <li id="s-contract" data-state="todo">publish forseti contracts <em>REST</em></li>
     <li id="s-policy" data-state="todo">sign policy: medical <em>IMPLICIT/PRIVATE</em></li>
     <li id="s-payment" data-state="todo">sign policy: payment <em>EXPLICIT/PRIVATE</em></li>

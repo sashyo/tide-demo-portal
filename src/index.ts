@@ -239,12 +239,22 @@ app.get('/onboard', (req, res) => {
 });
 
 /**
- * Back from the provisioner, right after linking.
+ * Back from the provisioner, right after linking. This is where the grant happens.
  *
- * This deliberately does NOT finalize. Finalizing grants tide-realm-admin, which flips the
- * realm to multiAdmin — a one-way door, after which signing a Forseti policy costs a quorum
- * ceremony instead of a single approval. So we register the realm from the phase-A adapter and
- * send the admin to /onboard/setup, which signs the policy first and finalizes afterwards.
+ * It has to be here, before the visitor has a browser session, and the reason is the token.
+ * Granting tide-realm-admin regenerates the user contexts, and the ORKs sign a JWT from the
+ * context they re-derive rather than from what the app sends. So a token minted before the
+ * grant describes a user who is not an admin, and signing a policy with it fails at the
+ * threshold step. Refreshing that token does not reliably fix it.
+ *
+ * Granting here means the first sign-in already carries the role, and the visitor sees exactly
+ * one login prompt for the whole of setup. Granting later cost two, because the second one
+ * existed only to reissue a token that should have been right the first time.
+ *
+ * The grant is server-driven, which is precisely what firstAdmin mode is for: it exists to
+ * establish the first tide-realm-admin assignment and, in the whitepaper's words, "only long
+ * enough to eliminate itself". Linking has already happened by this point, so the change
+ * request it files can actually be signed.
  */
 app.get('/onboard/complete', async (req, res) => {
   const s = session(req, res);
@@ -275,6 +285,27 @@ app.get('/onboard/complete', async (req, res) => {
 
     // Already finished (e.g. a reload): nothing left to set up.
     if (job.status === 'ready') return res.redirect('/');
+
+    // Grant now, so the sign-in that follows mints a token that already carries the role.
+    // A failure here is not fatal: the setup page grants again if it has to, and saying so in
+    // the log beats stalling the visitor on a page that cannot explain itself.
+    try {
+      const fin = await fetch(
+        `${config.provisionerUrl}/api/realms/jobs/${encodeURIComponent(jobId)}/finalize`,
+        { method: 'POST' },
+      );
+      const out = (await fin.json()) as { status?: string; adapter?: Adapter; error?: string };
+      if (fin.ok && out.status === 'ready') {
+        if (out.adapter) saveTenant(out.adapter);
+        s.setupJob = undefined;
+        console.log(`[onboard] ${tenant.realm}: tide-realm-admin granted before first sign-in`);
+      } else {
+        console.warn(`[onboard] ${tenant.realm}: finalize returned ${fin.status}`, out.error ?? out.status);
+      }
+    } catch (err) {
+      console.warn(`[onboard] ${tenant.realm}: finalize failed, setup will retry`, err);
+    }
+
     res.redirect('/onboard/setup');
   } catch (err) {
     console.error('[onboard]', err);
