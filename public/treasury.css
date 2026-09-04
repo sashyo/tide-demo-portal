@@ -102,3 +102,41 @@ table.ledger tr:last-child td { border-bottom: none; }
   padding: 14px 16px; overflow-x: auto; white-space: pre; color: var(--ink);
 }
 .dump-bad { border-color: hsl(2 45% 82%); background: hsl(2 60% 98%); color: hsl(2 30% 28%); }
+
+/* --- the stolen-database comparison (Marrindale) --------------------------- */
+/* Written for somebody who has never heard of a hash. Two files side by side, theirs and an
+   ordinary one, because "your data was in a breach" is the one part of this everybody has
+   already lived through. */
+.steal { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 620px) { .steal { grid-template-columns: 1fr; } }
+.steal-side { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+.steal-bad { background: hsl(2 60% 98%); border-color: hsl(2 45% 86%); }
+.steal-good { background: hsl(152 45% 98%); border-color: hsl(152 35% 82%); }
+.steal-head { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px; }
+.steal-bad .steal-head { color: hsl(2 55% 42%); }
+.steal-good .steal-head { color: hsl(152 55% 28%); }
+.steal-rec { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0 0 14px; font-size: 13.5px; }
+.steal-rec dt { color: var(--ink-3); font-size: 12.5px; }
+.steal-rec dd { margin: 0; word-break: break-all; }
+.steal-hash { font-family: var(--mono); font-size: 12px; color: hsl(2 50% 38%); }
+.steal-none { font-weight: 650; color: hsl(152 55% 28%); }
+.steal-note { font-size: 12.5px; line-height: 1.55; color: var(--ink-2); margin: 0; }
+
+/* Numbered, one idea per line, no jargon. */
+.plainsteps { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.plainsteps li { display: flex; gap: 13px; align-items: flex-start; font-size: 14.5px; line-height: 1.5; }
+.plainsteps span {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--soft); color: var(--accent-2); font-size: 12px; font-weight: 700; margin-top: 1px;
+}
+.idchip {
+  font-family: var(--mono); font-size: 19px; letter-spacing: .04em; color: var(--ink);
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; display: inline-block;
+}
+.idchip span { color: var(--ink-3); font-size: 15px; }
+.steal-live {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .08em; margin-left: 6px;
+  background: hsl(152 40% 92%); color: hsl(152 55% 26%); padding: 2px 7px; border-radius: 999px;
+}
+.steal-prov { margin-top: 8px; color: var(--ink-3); font-size: 11.5px; }

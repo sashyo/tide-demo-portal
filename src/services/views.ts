@@ -53,9 +53,9 @@ export function directory(v: Viewer, flash?: string): string {
   return shell('Services', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
   <section class="card">
-    <h2>Three agencies. Nothing to steal.</h2>
-    <p class="sub">You have no account at any of these, and none of them holds a password.
-      Use them, then look at what they actually store.</p>
+    <h2>Three agencies. No accounts anywhere.</h2>
+    <p class="sub">You never signed up for any of these, and not one of them keeps a password
+      for you. Use one, then go and see what they are actually holding.</p>
     <div class="apps">
       ${AGENCIES.map((a) => {
         const used = mine.find((u) => u.agency === a.id);
@@ -70,7 +70,7 @@ export function directory(v: Viewer, flash?: string): string {
       }).join('')}
     </div>
     <a class="btn-link" href="/services/identity" style="margin-top:20px;display:block">
-      <button class="btn-primary" type="button">Show me what Marrindale stores about me</button></a>
+      <button class="btn-primary" type="button">What happens if they get hacked?</button></a>
   </section>`, { href: '/', label: 'Portal' });
 }
 
@@ -107,78 +107,105 @@ export function agencyPage(v: Viewer, id: AgencyId, done?: string): string {
  * "no password stored" is worth nothing. The visitor has seen that sentence on the website
  * of every service that later leaked its password database.
  */
+/**
+ * The centre of this demo, written for somebody who has never heard of a hash.
+ *
+ * An earlier version led with the raw credential record. That proves the point to a
+ * developer and loses everyone else, and "no password is stored" is a sentence the visitor
+ * has already read on the website of every service that later leaked its password database.
+ *
+ * So it leads with the thing they DO recognise: a stolen database, side by side, theirs and
+ * a normal one. The real record is still there, one click down, because the argument only
+ * works if it can be checked.
+ */
 export function identityPage(v: Viewer, rec: IdentityRecord | null, flash?: string): string {
   const mine = uses(v.realm, v.person.sub);
+  const who = v.person.name;
 
-  const record = rec === null
-    ? `<div class="note note-warn"><strong>Could not read the record</strong>
-        The identity store did not answer. Nothing is being claimed here that was not read.</div>`
-    : `<pre class="dump">${esc(JSON.stringify({
-        credentials: rec.credentials,
-        totp: rec.totp,
-        disableableCredentialTypes: rec.disableableCredentialTypes,
-        requiredActions: rec.requiredActions,
-      }, null, 2))}</pre>
-      <div class="note ${rec.hasPassword ? 'note-err' : 'note-info'}">
-        <strong>${rec.hasPassword ? 'A password credential IS stored' : 'No password credential'}</strong>
-        ${rec.hasPassword
-          ? 'This realm is holding a password. That is not a Tide realm, or something reset it.'
-          : 'The store holds a Tide Authorization Key and nothing else. There is no hash, no salt and no reset token, because there is no password here to protect.'}
-      </div>`;
+  const unreadable = `<div class="note note-warn"><strong>Could not read the file</strong>
+      Marrindale's identity store did not answer just now, so nothing on this page was read
+      from it. Nothing is being claimed that was not checked.</div>`;
+
+  const stolen = rec === null ? unreadable : `
+    <div class="steal">
+      <div class="steal-side steal-bad">
+        <div class="steal-head">A normal service</div>
+        <dl class="steal-rec">
+          <dt>Name</dt><dd>${esc(who)}</dd>
+          <dt>Email</dt><dd>j.denes@example.com</dd>
+          <dt>Password</dt><dd class="steal-hash">$2b$12$eR9xK7pQ2mVt0aZ.uY4</dd>
+          <dt>Backup code</dt><dd class="steal-hash">JBSWY3DPEHPK3PXP</dd>
+        </dl>
+        <p class="steal-note">That scrambled password is still your password. A thief takes it
+          home and works on it for as long as they like, with nobody watching. If you used
+          that password anywhere else, they have that too.</p>
+      </div>
+      <div class="steal-side steal-good">
+        <div class="steal-head">Marrindale <span class="steal-live">read just now</span></div>
+        <dl class="steal-rec">
+          <dt>Name</dt><dd>${esc(who)}</dd>
+          <dt>Email</dt><dd>j.denes@example.com</dd>
+          <dt>Password</dt><dd class="steal-none">${rec.hasPassword ? 'stored' : 'none. not stored here'}</dd>
+          <dt>Backup code</dt><dd class="steal-none">${rec.totp ? 'stored' : 'none. not stored here'}</dd>
+        </dl>
+        <p class="steal-note">There is nothing to unscramble, nothing to try on your other
+          accounts, and nothing for you to reset. The thief has your name and your email,
+          which is the same as reading it off an envelope.</p>
+        <p class="steal-note steal-prov">The password and backup lines were read from
+          Marrindale's real store. The name and email are here so the two files line up.</p>
+      </div>
+    </div>`;
 
   return shell('Your identity', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
 
   <section class="card">
-    <h2>Take the database</h2>
-    <p class="sub">This is Marrindale's entire credential record for you, read from the
-      identity store just now. Not a description of it.</p>
-    ${record}
+    <h2>Someone steals Marrindale's files tonight</h2>
+    <p class="sub">What do they walk away with? Here is your file, next to the same file at an
+      ordinary service.</p>
+    ${stolen}
   </section>
 
   <section class="card">
-    <h2>What that row would normally be</h2>
-    <p class="sub">The same record in a conventional system, and what leaks when it does.</p>
-    <pre class="dump dump-bad">${esc(`credentials: [
-  {
-    "type": "password",
-    "hashIterations": 210000,
-    "secretData": "{\"value\":\"kQ9x…\",\"salt\":\"7cF2…\"}",
-    "credentialData": "{\"algorithm\":\"pbkdf2-sha512\"}"
-  },
-  { "type": "otp", "secretData": "{\"value\":\"JBSWY3DPEH…\"}" }
-]`)}</pre>
-    <div class="note note-warn">
-      <strong>Offline from the moment it leaves</strong>
-      A stolen hash is guessed on the thief's own hardware, at their own pace, with no rate
-      limit and nobody watching. The reuse across other sites is what turns one breach into
-      several. Rotating it means every user changing their password.
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>So what is checking the password?</h2>
-    <p class="sub">Independent nodes, none of which sees it.</p>
-    <ul class="discloses">
-      <li>Your password never leaves the browser as a password</li>
-      <li>Several nodes each apply one share of the check</li>
-      <li>None of them, and no server, ever holds enough to verify it alone</li>
-      <li>So there is no single place a password database could exist</li>
-    </ul>
+    <h2>Then how do you get in?</h2>
+    <p class="sub">You still type a password. It just never gets kept anywhere.</p>
+    <ol class="plainsteps">
+      <li><span>1</span>You type your password, and it stays in your browser.</li>
+      <li><span>2</span>Several separate computers each check one piece of it.</li>
+      <li><span>3</span>None of them ever sees the whole thing, so none of them can keep it.</li>
+      <li><span>4</span>There is no one place holding passwords, so there is no password
+        database to steal. Not from Marrindale, and not from us.</li>
+    </ol>
     <div class="note note-info">
-      <strong>This is not "sign in with Google"</strong>
-      Federated login moves the password to somebody else, who still stores a hash and can
-      still sign in as you. Here there is no such party. The identity is yours and no vendor
-      holds anything that can impersonate you.
+      <strong>It is not "sign in with Google" either</strong>
+      That just moves your password to a bigger company, which still keeps one and can still
+      sign in as you. Here nobody keeps one, including Tide.
     </div>
   </section>
 
   ${rec && rec.vuid ? `<section class="card">
-    <h2>The identifier Marrindale got</h2>
-    <pre class="dump">${esc(rec.vuid)}</pre>
-    <p class="sub">A different vendor is given a different identifier for the same person, so
-      two vendors comparing records cannot tell you are one human. You are looking at one
-      vendor's, which is all this page is in a position to show you.</p>
+    <h2>What Marrindale calls you</h2>
+    <p class="sub">Not your name. Just a number, and only this agency's copy of it.</p>
+    <div class="idchip">${esc(rec.vuid.slice(0, 8))}<span>${esc(rec.vuid.slice(8, 20))}...</span></div>
+    <p class="sub" style="margin:14px 0 0">The next service you use is given a completely
+      different number for you. If the two ever compared lists, they could not work out that
+      you are the same person.</p>
+  </section>` : ''}
+
+  ${rec ? `<section class="card">
+    <details>
+      <summary class="plain">Do not take our word for it. Show the real record.</summary>
+      <p class="sub" style="margin:14px 0 10px">Read from Marrindale's identity store when this
+        page loaded. <code>credentials</code> is where a password would be.</p>
+      <pre class="dump">${esc(JSON.stringify({
+        credentials: rec.credentials,
+        totp: rec.totp,
+        disableableCredentialTypes: rec.disableableCredentialTypes,
+        requiredActions: rec.requiredActions,
+      }, null, 2))}</pre>
+      ${rec.hasPassword ? `<div class="note note-err"><strong>A password IS stored here</strong>
+        That should not happen on a Tide realm. Something reset it.</div>` : ''}
+    </details>
   </section>` : ''}
 
   <section class="card">
