@@ -448,7 +448,26 @@ app.use((_req, res) => res.status(404).send(problem('Not found', 'That page does
 
 app.listen(config.port, () => {
   console.log(`tide-demo-portal listening on :${config.port}`);
-  console.log(`  Portal URL:  ${config.portalUrl}`);
+  const derived = config.codespaceUrl !== null && config.portalUrl === config.codespaceUrl;
+  console.log(`  Portal URL:  ${config.portalUrl}${derived ? '  (derived from CODESPACE_NAME)' : ''}`);
+  if (config.inCodespace && !derived) {
+    // An explicit PORTAL_URL overrides the forwarded address. That is legitimate behind a
+    // tunnel, and fatal if it is a leftover: the realm gets built around this value.
+    console.warn(`  !! PORTAL_URL overrides the Codespace address ${config.codespaceUrl}`);
+  }
   console.log(`  Provisioner: ${config.provisionerUrl}`);
   console.log(`  Redirect:    ${REDIRECT_URI}`);
+
+  // In a Codespace the provisioner is remote by definition, so a localhost default here means
+  // PROVISIONER_URL was never set. Say so at boot: the alternative is the visitor filling in
+  // the create-workspace form and waiting for a connection that was never going to succeed.
+  if (config.inCodespace && /localhost|127\.0\.0\.1/.test(config.provisionerUrl)) {
+    console.warn('\n  !! PROVISIONER_URL still points at localhost, and nothing is listening there.');
+    console.warn('     Set it to the hosted provisioner in .devcontainer/devcontainer.json,');
+    console.warn('     then rebuild the container. See CODESPACES.md.\n');
+  }
+  if (config.inCodespace) {
+    console.log(`\n  Port ${config.port} must be set to Public in the Ports panel, or the`);
+    console.log('  sign-in redirect lands on a GitHub login page instead of this app.\n');
+  }
 });

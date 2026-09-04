@@ -1,7 +1,12 @@
 # tide-demo-portal
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sashyo/tide-demo-portal?quickstart=1)
+
+No local setup: the portal derives its own public URL from the Codespace, so the realm it
+creates is registered against an address that actually works. See [CODESPACES.md](CODESPACES.md).
+
 A portal to other demo apps. A visitor arrives with no account, provisions **their own Tide
-realm**, comes back, signs in with it, and unlocks the demo apps — which share that realm.
+realm**, comes back, signs in with it, and unlocks the demo apps, which all share that realm.
 
 Pairs with `tide-realm-provisioner`, which does the realm creation. That service holds a
 credential that can create realms on a live TideCloak instance, so it lives in a separate
@@ -25,7 +30,7 @@ realm on its own; it calls `PROVISIONER_URL` and consumes what comes back.
 ```
 
 `app_url` is the crux: it becomes the new realm's client `redirectUris` and `webOrigins`, so
-it MUST be this portal's real public origin. Set `PORTAL_URL` accordingly before going live —
+it MUST be this portal's real public origin. Set `PORTAL_URL` accordingly before going live;
 with it wrong, realms come out unable to accept this app's callback and sign-in fails.
 
 ## Where tidecloak.json comes from
@@ -39,7 +44,7 @@ The portal never asks anyone to paste config. On return it fetches
 | `data/realms/<realm>/tidecloak.json` | a real file, the way a Tide app normally ships one |
 | `GET /api/realms/:realm/tidecloak.json` | **sibling demo apps**, so they need no provisioning code |
 
-The adapter is entirely public — realm, auth server URL, client id, the realm's *public*
+The adapter is entirely public: realm, auth server URL, client id, the realm's *public*
 signing key, vendor id, home ORK URL. No secret, which is why it is safe in a file and safe
 to serve unauthenticated. `GET /api/me` tells a sibling app which realm this browser is on.
 
@@ -48,7 +53,7 @@ to serve unauthenticated. `GET /api/me` tells a sibling app which realm this bro
 ## Two things that will break a naive client
 
 **1. Tokens are EdDSA, not RS256.** Tide realms sign with Ed25519. Node's `jsonwebtoken` has
-no EdDSA support at all, so it cannot verify these tokens — this portal uses `jose`, and pins
+no EdDSA support at all, so it cannot verify these tokens. This portal uses `jose`, and pins
 no algorithm. Anything hard-coded to RS256 401s on every request.
 
 **2. DPoP is required.** The realm's client carries `dpop.bound.access.tokens: true`, so every
@@ -66,7 +71,7 @@ token when one is presented, and a retry when the server demands a `DPoP-Nonce`.
 that silently break otherwise: `htu` must be scheme+host+path with no query string, and a
 first-request 400 carrying `use_dpop_nonce` is a **retry instruction, not a failure**.
 
-After sign-in the portal shows the binding it achieved — our key's thumbprint, the `cnf.jkt`
+After sign-in the portal shows the binding it achieved: our key's thumbprint, the `cnf.jkt`
 the realm recorded, whether they match, and whether the token was actually accepted at
 `/userinfo`. That is a real check, not a claim: a wrong binding 401s there.
 
@@ -81,7 +86,7 @@ npm install && npm run build && npm start
 
 | Var | Meaning |
 |---|---|
-| `PORTAL_URL` | This portal's public origin — becomes the realms' redirect URI |
+| `PORTAL_URL` | This portal's public origin, which becomes the realms' redirect URI. Derived from `CODESPACE_NAME` when unset in a Codespace |
 | `PROVISIONER_URL` | Where visitors go to create a realm |
 | `SESSION_SECRET` | Signs the session cookie. Unset = generated per boot = everyone signed out on restart |
 | `SECURE_COOKIES` | `true` once served over https |
@@ -101,7 +106,7 @@ rather than dead links. Give them real URLs to make them live.
   itself is not deleted.
 - **Never attempt a governed write on a provisioned realm from the provisioner's service
   account.** Once IGA is on, an admin-API write becomes a change request, and one the service
-  account cannot self-approve returns `authorize=409` (four-eyes) — which then blocks
+  account cannot self-approve returns `authorize=409` (four-eyes), which then blocks
   *everything else queued behind it, including `DELETE_REALM`*. That wedges the realm
   permanently. MEASURED 2026-09-02: `portal-loop-01` was wedged this way by an attempt to flip
   one client attribute after creation, and could not afterwards be fixed or deleted. Get the

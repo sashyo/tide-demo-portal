@@ -1,0 +1,44 @@
+{
+  "name": "Tide demo portal",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+
+  "forwardPorts": [8090],
+  "portsAttributes": {
+    "8090": {
+      "label": "Demo portal",
+      "onAutoForward": "openPreview",
+
+      // Public, because the sign-in journey leaves this origin and comes back to it: out to
+      // the provisioner, out to TideCloak, out to the Tide enclave on the ORK. A private
+      // forwarded port answers each of those returning redirects with a GitHub
+      // authentication page, and the callback never reaches the app.
+      //
+      // If GitHub still shows the port as Private after the container starts, set it by hand
+      // in the Ports panel: right-click the row, Port Visibility, Public. See CODESPACES.md.
+      "visibility": "public"
+    }
+  },
+
+  "containerEnv": {
+    // The hosted middleware that actually creates realms. It holds a credential for a live
+    // TideCloak instance, so it is deliberately not part of this repository, and there is
+    // nothing to run locally in its place.
+    //
+    // >>> Replace this with your deployed provisioner before publishing the repo. <<<
+    "PROVISIONER_URL": "https://tide-realm-provisioner.example.com"
+
+    // PORTAL_URL is deliberately NOT set here. The portal derives it from CODESPACE_NAME at
+    // boot, because the forwarded hostname is generated per Codespace and this value becomes
+    // the new realm's redirect URI. A stale one produces a realm that cannot be signed into
+    // and has to be recreated.
+  },
+
+  "postCreateCommand": "npm install && npm run build",
+  "postAttachCommand": "npm start",
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  }
+}
