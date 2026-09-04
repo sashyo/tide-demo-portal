@@ -38,14 +38,14 @@ function shell(title: string, v: Viewer, body: string, back: Back): string {
   return `<!doctype html><html lang="en" data-app="services"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Marrindale Services</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d4ec4'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui'%3EM%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/breach.css"></head><body>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/breach.css"><link rel="stylesheet" href="/signup.css"></head><body>
 <div class="wrap">
   <div class="mast"><div class="mark" aria-hidden="true">M</div>
     <div style="flex:1"><h1>Marrindale Services</h1>
       <div class="host">${esc(v.person.name)} · no account created</div></div>
     <a href="${esc(back.href)}" class="back"><span aria-hidden="true">&larr;</span> ${esc(back.label)}</a></div>
   ${body}
-</div><script src="/breach.js"></script></body></html>`;
+</div><script src="/breach.js"></script><script src="/signup.js"></script></body></html>`;
 }
 
 export function directory(v: Viewer, flash?: string): string {
@@ -69,8 +69,11 @@ export function directory(v: Viewer, flash?: string): string {
         </a>`;
       }).join('')}
     </div>
-    <a class="btn-link" href="/services/identity" style="margin-top:20px;display:block">
-      <button class="btn-primary" type="button">What happens if they get hacked?</button></a>
+    <div class="cta-pair">
+      <button class="btn-primary" type="button" data-signup data-service="Marrindale Health">
+        Watch someone open one of these for the first time</button>
+      <a class="plain" href="/services/identity">Or see what they keep about you</a>
+    </div>
   </section>`, { href: '/', label: 'Portal' });
 }
 

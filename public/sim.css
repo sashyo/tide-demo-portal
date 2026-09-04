@@ -95,7 +95,7 @@
 
 .sim-bar {
   display: flex; align-items: center; gap: 12px; padding: 14px 18px;
-  background: linear-gradient(180deg, hsl(var(--ch) 55% 55%), hsl(var(--ch) 58% 46%));
+  background: hsl(var(--ch) 56% 50%);
   color: #fff;
 }
 .sim-avatar {
@@ -132,7 +132,7 @@
 .sim-approve, .sim-yes, .sim-deny {
   font: inherit; font-size: 15px; font-weight: 650; padding: 13px 22px; border-radius: 9px;
   cursor: default; border: 1px solid hsl(var(--ch) 45% 42%);
-  background: linear-gradient(180deg, hsl(var(--ch) 55% 54%), hsl(var(--ch) 58% 45%)); color: #fff;
+  background: hsl(var(--ch) 56% 49%); color: #fff;
 }
 .sim-approve { width: 100%; }
 .sim-deny { background: #fff; color: hsl(var(--ch) 15% 40%); border-color: hsl(var(--ch) 20% 80%); }
