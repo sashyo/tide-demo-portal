@@ -33,9 +33,9 @@ table.ledger tr:last-child td { border-bottom: none; }
 .appr-meta { font-size: 12.5px; color: var(--ink-2); margin-top: 1px; }
 .appr-sub { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-top: 3px; word-break: break-all; }
 .real-tag, .sim-tag { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 3px; }
-.real-tag { background: var(--accent); color: var(--on-accent); }
 .sim-tag { background: var(--panel-2); color: var(--ink-3); }
 .sim-note { margin-top: 8px; font-size: 12.5px; color: var(--ink-2); }
+.real-tag { background: var(--accent); color: var(--on-accent); }
 
 .phone { display: flex; gap: 18px; align-items: flex-start; margin-top: 18px;
   border: 1px solid var(--line-2); border-radius: 8px; padding: 16px; background: var(--sunk); }
@@ -86,83 +86,9 @@ table.ledger tr:last-child td { border-bottom: none; }
 .inline-form input { flex: 1; min-width: 0; }
 .inline-form button { flex: none; white-space: nowrap; }
 
-/* --- replay of another approver's screen ---------------------------------- */
-.sim-stage {
-  position: fixed; right: 24px; bottom: 24px; width: 300px; z-index: 60;
-  opacity: 0; transform: translateY(10px) scale(.98);
-  transition: opacity .3s ease, transform .3s ease;
-}
-.sim-stage.in { opacity: 1; transform: none; }
-.sim-win {
-  position: relative; border-radius: 12px; overflow: hidden;
-  border: 1px solid hsl(var(--ch) 30% 72%);
-  background: hsl(var(--ch) 30% 99%);
-  box-shadow: 0 12px 32px hsl(var(--ch) 30% 20% / .22), 0 2px 6px hsl(var(--ch) 30% 20% / .12);
-}
-.sim-bar {
-  display: flex; align-items: center; gap: 9px; padding: 9px 12px;
-  background: linear-gradient(180deg, hsl(var(--ch) 55% 55%), hsl(var(--ch) 58% 46%));
-  color: #fff;
-}
-.sim-avatar {
-  width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
-  background: hsl(0 0% 100% / .22); font-size: 10px; font-weight: 700; letter-spacing: .02em;
-}
-.sim-name { font-size: 12.5px; font-weight: 600; flex: 1; }
-.sim-tagline {
-  font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em;
-  background: hsl(0 0% 100% / .2); padding: 2px 6px; border-radius: 999px;
-}
-.sim-body { padding: 14px; }
-.sim-app { font-size: 10.5px; color: hsl(var(--ch) 15% 45%); }
-.sim-run { font-family: var(--mono); font-size: 11px; color: hsl(var(--ch) 12% 52%); margin-top: 2px; }
-.sim-amt { font-family: var(--mono); font-size: 20px; margin: 6px 0 12px; color: hsl(var(--ch) 25% 18%); }
-.sim-approve, .sim-yes, .sim-deny {
-  font: inherit; font-size: 12.5px; font-weight: 600; padding: 8px 14px; border-radius: 7px;
-  cursor: default; border: 1px solid hsl(var(--ch) 45% 42%);
-  background: linear-gradient(180deg, hsl(var(--ch) 55% 54%), hsl(var(--ch) 58% 45%)); color: #fff;
-}
-.sim-approve { width: 100%; }
-.sim-deny { background: #fff; color: hsl(var(--ch) 15% 40%); border-color: hsl(var(--ch) 20% 80%); }
-.pressed { filter: brightness(.9); transform: translateY(1px); }
-
-.sim-enclave {
-  position: absolute; inset: 34px 0 0; background: hsl(var(--ch) 25% 14%); color: #fff;
-  padding: 16px; display: flex; flex-direction: column; justify-content: center;
-  animation: simUp .28s ease;
-}
-@keyframes simUp { from { transform: translateY(100%) } to { transform: none } }
-.sim-enclave-head {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .1em;
-  color: hsl(var(--ch) 40% 72%); margin-bottom: 8px;
-}
-.sim-enclave p { margin: 0 0 14px; font-size: 13px; line-height: 1.45; }
-.sim-enclave-actions { display: flex; gap: 8px; }
-.sim-enclave-actions button { flex: 1; }
-
-.sim-done {
-  position: absolute; inset: 34px 0 0; background: hsl(var(--ch) 30% 99%);
-  display: grid; place-items: center; font-size: 13px; font-weight: 600;
-  color: hsl(var(--ch) 50% 34%);
-}
-.sim-cursor {
-  position: absolute; left: 50%; top: 90%; width: 12px; height: 12px; border-radius: 50%;
-  background: hsl(var(--ch) 25% 20%); border: 2px solid #fff; pointer-events: none;
-  box-shadow: 0 1px 4px hsl(var(--ch) 30% 20% / .4);
-  transition: left .6s cubic-bezier(.4,0,.2,1), top .6s cubic-bezier(.4,0,.2,1), transform .15s;
-  transform: translate(-50%, -50%);
-}
-.sim-cursor.click { transform: translate(-50%, -50%) scale(.7); }
-@media (prefers-reduced-motion: reduce) {
-  .sim-stage, .sim-cursor { transition: none; }
-  .sim-enclave { animation: none; }
-}
-@media (max-width: 560px) { .sim-stage { right: 12px; left: 12px; width: auto; } }
-
 /* --- clinic: sealed note request ------------------------------------------ */
 .req-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .ok-tag {
   font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
   background: var(--soft); color: var(--accent-2);
 }
-.sim-name em { display: block; font-style: normal; font-size: 10px; opacity: .8; font-weight: 400; }

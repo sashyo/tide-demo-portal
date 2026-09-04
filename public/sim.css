@@ -1,0 +1,220 @@
+/* ---------------------------------------------------------------------------
+   The simulated colleague's screen. Driven by public/replay.js.
+
+   Was a 300px card in the bottom-right corner, which is the shape of a toast
+   from THIS app. The thing being shown is the opposite: a second person, on a
+   different machine, doing something you are not allowed to do yourself. So it
+   takes the whole viewport, dims your page behind it, and wears its own browser
+   chrome in that person's colour.
+
+   Everything here is scoped to --ch, the person's hue, set inline by replay.js.
+   None of the app's own tokens are used inside the window on purpose: it must
+   not look like a panel of the page it is covering.
+
+   Used by Treasury and the Clinic. Kept in one file rather than duplicated into
+   both stylesheets, which is what it was before.
+   --------------------------------------------------------------------------- */
+
+.sim-stage {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center;
+  opacity: 0; transition: opacity .32s ease;
+}
+.sim-stage.in { opacity: 1; }
+
+/* Your page, dimmed. This is most of the "somewhere else" signal, and it also
+   stops a stray click landing on the app while the replay is running. */
+.sim-scrim {
+  position: absolute; inset: 0;
+  background: hsl(var(--ch) 30% 12% / .55);
+  backdrop-filter: blur(3px) saturate(.6);
+  -webkit-backdrop-filter: blur(3px) saturate(.6);
+}
+
+.sim-frame {
+  position: relative; width: min(560px, calc(100vw - 40px));
+  transform: translateY(14px) scale(.97);
+  transition: transform .32s cubic-bezier(.2, .8, .2, 1);
+}
+.sim-stage.in .sim-frame { transform: none; }
+
+/* --- caption: says in words whose screen this is --------------------------- */
+.sim-caption {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+  color: #fff; font-size: 15px; line-height: 1.45; margin-bottom: 16px;
+  text-shadow: 0 1px 8px hsl(var(--ch) 40% 10% / .6);
+}
+/* The sentence is one flex item. Left as bare text nodes around a <strong>, the column
+   layout broke it into three stacked lines. */
+.sim-said { display: block; }
+.sim-caption strong { font-weight: 700; }
+/* Its own line. Inline, the sentence wrapped around it and the second line hung off the
+   left edge of the badge instead of lining up with the window. */
+.sim-live {
+  display: inline-flex; align-items: center; gap: 7px; flex: none;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  background: hsl(var(--ch) 70% 60% / .25); border: 1px solid hsl(var(--ch) 70% 70% / .5);
+  padding: 5px 11px; border-radius: 999px; text-shadow: none;
+}
+.sim-live i {
+  width: 6px; height: 6px; border-radius: 50%; background: hsl(var(--ch) 85% 68%);
+  box-shadow: 0 0 8px hsl(var(--ch) 85% 68%);
+  animation: simPulse 1.4s ease-in-out infinite;
+}
+@keyframes simPulse { 0%, 100% { opacity: .35 } 50% { opacity: 1 } }
+
+/* --- the window ------------------------------------------------------------ */
+.sim-win {
+  border-radius: 14px; overflow: hidden;
+  border: 1px solid hsl(var(--ch) 40% 62%);
+  background: hsl(var(--ch) 40% 99%);
+  box-shadow:
+    0 40px 90px hsl(var(--ch) 40% 8% / .5),
+    0 8px 24px hsl(var(--ch) 40% 8% / .35),
+    0 0 0 6px hsl(var(--ch) 60% 60% / .16);
+}
+
+/* Browser chrome, so it reads as a separate machine rather than a card. */
+.sim-chrome {
+  display: flex; align-items: center; gap: 12px; padding: 9px 14px;
+  background: hsl(var(--ch) 30% 92%); border-bottom: 1px solid hsl(var(--ch) 30% 84%);
+}
+.sim-dots { display: flex; gap: 6px; flex: none; }
+.sim-dots i { width: 10px; height: 10px; border-radius: 50%; background: hsl(var(--ch) 20% 76%); }
+.sim-url {
+  flex: 1; font-family: var(--mono, monospace); font-size: 11.5px;
+  color: hsl(var(--ch) 25% 32%); background: hsl(var(--ch) 30% 97%);
+  border: 1px solid hsl(var(--ch) 25% 86%); border-radius: 999px;
+  padding: 4px 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sim-url span { color: hsl(var(--ch) 20% 55%); }
+.sim-tagline {
+  flex: none; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  background: hsl(var(--ch) 55% 48%); color: #fff; padding: 4px 9px; border-radius: 4px;
+}
+
+.sim-bar {
+  display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  background: linear-gradient(180deg, hsl(var(--ch) 55% 55%), hsl(var(--ch) 58% 46%));
+  color: #fff;
+}
+.sim-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  background: hsl(0 0% 100% / .22); border: 1.5px solid hsl(0 0% 100% / .45);
+  font-size: 14px; font-weight: 700; letter-spacing: .02em;
+}
+.sim-name { font-size: 16px; font-weight: 650; flex: 1; line-height: 1.25; }
+.sim-name em { display: block; font-style: normal; font-size: 12px; opacity: .85; font-weight: 400; }
+.sim-session {
+  flex: none; font-size: 11px; padding: 4px 10px; border-radius: 999px;
+  background: hsl(0 0% 100% / .18); border: 1px solid hsl(0 0% 100% / .3);
+}
+
+/* --- the part that changes ------------------------------------------------- */
+/* The enclave panel is absolutely positioned, so it cannot push this box open: whatever it
+   needs has to be reserved here or its buttons are clipped off the bottom. Measured at 210px
+   for a two-line question, plus the panel's own 40px of padding, plus room for a third line. */
+.sim-screen { position: relative; min-height: 285px; }
+
+/* Both overlays set display, which beats the browser's default styling for [hidden]. The
+   app's own reset carries a !important rule, but this file has to stand on its own: without
+   this the finished panel is painted over the buttons from the first frame. */
+.sim-enclave[hidden], .sim-done[hidden] { display: none !important; }
+.sim-body { padding: 26px 22px 24px; }
+.sim-run {
+  font-family: var(--mono, monospace); font-size: 12.5px;
+  color: hsl(var(--ch) 15% 48%); margin-bottom: 6px;
+}
+.sim-amt {
+  font-family: var(--mono, monospace); font-size: 30px; line-height: 1.2;
+  margin: 0 0 22px; color: hsl(var(--ch) 30% 16%); letter-spacing: -.02em;
+}
+.sim-approve, .sim-yes, .sim-deny {
+  font: inherit; font-size: 15px; font-weight: 650; padding: 13px 22px; border-radius: 9px;
+  cursor: default; border: 1px solid hsl(var(--ch) 45% 42%);
+  background: linear-gradient(180deg, hsl(var(--ch) 55% 54%), hsl(var(--ch) 58% 45%)); color: #fff;
+}
+.sim-approve { width: 100%; }
+.sim-deny { background: #fff; color: hsl(var(--ch) 15% 40%); border-color: hsl(var(--ch) 20% 80%); }
+.pressed { filter: brightness(.88); transform: translateY(1px); }
+
+/* Their enclave prompt, drawn over their window only.
+ *
+ * Styled from the real thing rather than invented: the Tide enclave is a blue diagonal ground
+ * with a round white Tide Cloak badge on the left and a white card on the right carrying a
+ * full-width pill button. Reproduced here so the moment in the replay looks like the moment a
+ * user will actually meet.
+ *
+ * Note what it does NOT use: --ch, the person's colour. The enclave belongs to Tide, not to
+ * their app, and it looks identical no matter whose screen it opens on. Tinting it per person
+ * would quietly undo the thing the replay exists to show. */
+.sim-enclave {
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 16px;
+  padding: 20px; overflow: hidden; animation: simUp .3s ease;
+  background:
+    linear-gradient(128deg,
+      #0a63c4 0%, #0a63c4 26%,
+      #1583d6 26%, #1583d6 44%,
+      #2ba3e4 44%, #2ba3e4 62%,
+      #57bdee 62%, #57bdee 80%,
+      #8fd6f6 80%);
+}
+@keyframes simUp { from { transform: translateY(100%) } to { transform: none } }
+
+.sim-enc-badge {
+  width: 92px; height: 92px; flex: none; border-radius: 50%; background: #fff;
+  border: 5px solid hsl(203 70% 72% / .55);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #0b1220; line-height: 1;
+}
+.sim-enc-badge span { font-size: 14px; letter-spacing: -.02em; }
+.sim-enc-badge b { font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+
+.sim-enc-card {
+  flex: 1; min-width: 0; background: #fff; border-radius: 14px; padding: 18px 20px;
+  box-shadow: 0 10px 30px hsl(210 60% 20% / .22);
+}
+.sim-enc-back { font-size: 12.5px; color: #3f4652; text-decoration: underline; margin-bottom: 10px; }
+.sim-enc-card h4 { margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #0b1220; letter-spacing: -.02em; }
+.sim-enclave p { margin: 0 0 16px; font-size: 14px; line-height: 1.5; color: #3f4652; }
+.sim-enclave-actions { display: flex; gap: 10px; }
+.sim-enclave-actions button { flex: 1; border-radius: 999px; font-size: 14px; padding: 11px 18px; }
+/* The enclave's own buttons, in Tide's blue rather than the app's. */
+.sim-yes { background: #0b5ed7; border-color: #0b5ed7; }
+.sim-deny { background: #fff; color: #3f4652; border-color: #d3d8e0; }
+@media (max-width: 560px) {
+  .sim-enc-badge { display: none; }
+}
+
+.sim-done {
+  position: absolute; inset: 0; background: hsl(var(--ch) 40% 99%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  font-size: 16px; font-weight: 650; color: hsl(var(--ch) 50% 30%); text-align: center;
+  padding: 20px;
+}
+.sim-tick {
+  width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+  background: hsl(var(--ch) 55% 48%); color: #fff; font-size: 22px;
+}
+
+.sim-cursor {
+  position: absolute; left: 50%; top: 85%; width: 16px; height: 16px; border-radius: 50%;
+  background: hsl(var(--ch) 30% 18%); border: 2.5px solid #fff; pointer-events: none;
+  box-shadow: 0 2px 10px hsl(var(--ch) 30% 10% / .6);
+  transition: left .65s cubic-bezier(.4, 0, .2, 1), top .65s cubic-bezier(.4, 0, .2, 1),
+              transform .15s, opacity .3s ease;
+  transform: translate(-50%, -50%);
+}
+.sim-cursor.click { transform: translate(-50%, -50%) scale(.65); }
+/* Once the last button has been pressed there is nothing left to point at. */
+.sim-cursor.gone { opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-stage, .sim-frame, .sim-cursor { transition: none; }
+  .sim-enclave { animation: none; }
+  .sim-live i { animation: none; opacity: 1; }
+}
+@media (max-width: 560px) {
+  .sim-amt { font-size: 24px; }
+  .sim-caption { font-size: 13px; }
+}
