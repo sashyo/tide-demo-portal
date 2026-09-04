@@ -22,10 +22,8 @@
   "containerEnv": {
     // The hosted middleware that actually creates realms. It holds a credential for a live
     // TideCloak instance, so it is deliberately not part of this repository, and there is
-    // nothing to run locally in its place.
-    //
-    // >>> Replace this with your deployed provisioner before publishing the repo. <<<
-    "PROVISIONER_URL": "https://tide-realm-provisioner.example.com"
+    // nothing to run locally in its place. Change this only if you are running your own.
+    "PROVISIONER_URL": "https://tidecloak-provisioner.thankfulmushroom-6a65d40c.australiaeast.azurecontainerapps.io"
 
     // PORTAL_URL is deliberately NOT set here. The portal derives it from CODESPACE_NAME at
     // boot, because the forwarded hostname is generated per Codespace and this value becomes

@@ -70,16 +70,32 @@ The portal cannot create realms. It asks a separate service to, and that service
 credential for a live TideCloak instance, which is why it is a private repository and not
 something you can run locally.
 
-Set its address in `.devcontainer/devcontainer.json`:
+**This is already configured.** `.devcontainer/devcontainer.json` points at the hosted
+provisioner, so a fresh Codespace works with no edit:
 
 ```jsonc
 "containerEnv": {
-  "PROVISIONER_URL": "https://your-provisioner.example.com"
+  "PROVISIONER_URL": "https://tidecloak-provisioner.thankfulmushroom-6a65d40c.australiaeast.azurecontainerapps.io"
 }
 ```
 
-Then **Rebuild Container** from the command palette, since `containerEnv` is read at container
-start. If you leave it at the placeholder, the portal says so at boot:
+Check it is up before you start:
+
+```bash
+curl -s "$PROVISIONER_URL/health"
+```
+
+```json
+{"ok":true,"tidecloak":"https://login.dauth.me","active":null,"queued":0,
+ "storage":{"path":"/data/jobs.json","writable":true,"error":null}}
+```
+
+`active` and `queued` tell you whether someone else is provisioning right now, which is the
+usual reason a realm seems slow to start.
+
+Only change the URL if you are running your own provisioner. If you do, **Rebuild Container**
+from the command palette afterwards, since `containerEnv` is read at container start. Left
+unset entirely, the portal says so at boot:
 
 ```
   !! PROVISIONER_URL still points at localhost, and nothing is listening there.
