@@ -189,4 +189,25 @@ export async function initTide(returnTo) {
   return false;
 }
 
+/**
+ * Force a fresh authentication, for when the current token is stale in a way a refresh cannot
+ * fix: the claims were minted against a user context that has since changed.
+ *
+ * Uses the same prompt=login as the first sign-in, and for the same reason documented above:
+ * without it Tide's cookie authenticator short-circuits on the existing client session, the
+ * enclave is never asked to approve the DPoP key, and the exchange fails in a way the adapter
+ * reports only as "not authenticated".
+ */
+export function forceRelogin(reason) {
+  clientLog('nav', 'forcing a fresh login: ' + (reason || 'stale token'));
+  window.__tideNextUrl = 'relogin';
+  const client = IAMService.getTideCloakClient();
+  if (client?.login) {
+    client.login({ redirectUri: selfUrl(), prompt: 'login' });
+    return true;
+  }
+  clientLog('error', 'no Tide client available to re-login');
+  return false;
+}
+
 export { IAMService };

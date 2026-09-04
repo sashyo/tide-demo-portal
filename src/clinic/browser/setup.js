@@ -1,4 +1,4 @@
-import { clientLog, initTide, isPopupBlocked, POPUP_HELP, IAMService } from './tide.js';
+import { clientLog, forceRelogin, initTide, isPopupBlocked, POPUP_HELP, IAMService } from './tide.js';
 import { Models } from '@tideorg/js';
 import { PolicySignRequest } from 'heimdall-tide';
 
@@ -31,6 +31,9 @@ const { Policy, ApprovalType, ExecutionType, BaseTideRequest } = Models;
  * likely to be blocked, since only the first is clearly tied to the user's click.
  */
 const $ = (id) => document.getElementById(id);
+
+/** Set when we have already re-logged in once to pick up the role. Stops a redirect loop. */
+const RELOGIN_FOR_ROLE = 'tide_setup_relogin_for_role';
 
 /** Append a log line. A developer surface shows a trail, not a single replaced sentence. */
 function log(msg, cls) {
@@ -125,10 +128,29 @@ async function run() {
       if (!isAdmin) await new Promise((r) => setTimeout(r, attempt * 1200));
     }
     if (!isAdmin) {
-      throw new Error('Your session still does not carry tide-realm-admin. The grant went '
-        + 'through, so signing out and back in should pick it up, and setup will resume from '
-        + 'here.');
+      /* A refresh was not enough, so take a new token the only way that reliably works.
+       *
+       * The grant regenerates the user contexts and re-seals the authorization surface. A
+       * refresh exchange does not always come back describing the new one, and the ORKs sign
+       * against what they re-derive, not against what this page believes. A fresh login mints
+       * a token from the current state.
+       *
+       * The page comes back to itself and starts again. Granting is idempotent, so the second
+       * pass walks straight through it and on to the contracts. The guard is there because a
+       * re-login that does not fix it must not become a redirect loop: fail once, in words. */
+      let alreadyTried = false;
+      try { alreadyTried = sessionStorage.getItem(RELOGIN_FOR_ROLE) === '1'; } catch {}
+      if (!alreadyTried) {
+        try { sessionStorage.setItem(RELOGIN_FOR_ROLE, '1'); } catch {}
+        log('token still lacks the role, signing in again for a fresh one', 'warn');
+        say('Signing you in again to pick up the new role…');
+        if (forceRelogin('tide-realm-admin granted after this token was issued')) return;
+      }
+      throw new Error('Your session still does not carry tide-realm-admin after signing in '
+        + 'again. The grant itself went through, so the workspace is usable; the policies can '
+        + 'be signed from this page once the role appears on your token.');
     }
+    try { sessionStorage.removeItem(RELOGIN_FOR_ROLE); } catch {}
     log('token refreshed, now carries tide-realm-admin', 'ok');
 
     say('Publishing the encryption contracts…');
