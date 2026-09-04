@@ -99,6 +99,7 @@
         '<div class="bx-caption">' +
           '<span class="bx-tag">Simulated attack</span>' +
           '<span class="bx-act">Act 1 of 2</span>' +
+          '<span class="bx-world bx-world-off">Not secured by Tide</span>' +
         '</div>' +
         '<div class="bx-win">' +
           '<div class="bx-chrome"><span class="bx-dots"><i></i><i></i><i></i></span>' +
@@ -141,6 +142,9 @@
     // --- Act 2: this service ---------------------------------------------------------
     if (stop()) return teardown(stage);
     act.textContent = 'Act 2 of 2';
+    var badge = stage.querySelector('.bx-world');
+    badge.className = 'bx-world bx-world-on';
+    badge.textContent = 'Secured by Tide';
     term.innerHTML = '';
     await wait(T.actGap);
     await say(term, '$ cat users.sql &nbsp;<span class="bx-dim">// ' + esc(o.service) + '</span>', 'bx-cmd');

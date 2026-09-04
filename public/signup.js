@@ -86,10 +86,12 @@
           '<button class="su-close" type="button">Skip</button>' +
         '</div>' +
         '<div class="su-cols">' +
-          '<section class="su-slow su-col"><header><h4>Signing up the usual way</h4>' +
+          '<section class="su-slow su-col"><header><h4>Signing up the usual way' +
+            '<span class="su-world su-world-off">Not secured by Tide</span></h4>' +
             '<div class="su-clock">0s</div></header><ol class="su-steps"></ol>' +
             '<div class="su-out"></div></section>' +
-          '<section class="su-fast su-col"><header><h4>Bringing your own identity</h4>' +
+          '<section class="su-fast su-col"><header><h4>Bringing your own identity' +
+            '<span class="su-world su-world-on">Secured by Tide</span></h4>' +
             '<div class="su-clock">0s</div></header><ol class="su-steps"></ol>' +
             '<div class="su-out"></div></section>' +
         '</div>' +

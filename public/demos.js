@@ -62,6 +62,83 @@
     stage.querySelector('.dm-body').innerHTML = '';
   }
 
+  /**
+   * Say outright whether the act on screen is Tide-secured.
+   *
+   * Added because people were losing track of which world an act belonged to, and a comparison
+   * whose two halves are indistinguishable is worse than no comparison: it reads as one system
+   * behaving inconsistently.
+   */
+  function world(stage, on, note) {
+    var d = document.createElement('div');
+    d.className = 'dm-world ' + (on ? 'dm-world-on' : 'dm-world-off');
+    d.innerHTML = '<i></i>' + (on ? 'Secured by Tide' : 'Not secured by Tide')
+      + (note ? '<em>' + esc(note) + '</em>' : '');
+    var body = stage.querySelector('.dm-body');
+    body.insertBefore(d, body.firstChild);
+  }
+
+  /**
+   * The request leaving, and the network answering.
+   *
+   * The flat checklist this replaces looked exactly like an app checking its own rule, which is
+   * the single impression these demos exist to remove. The refusal does not come from code the
+   * attacker was arguing with. It comes from each node running the contract on its own and
+   * declining to contribute a partial signature, and without a threshold of those there is no
+   * signature to submit anywhere.
+   *
+   * 20 nodes and a threshold of 14 are mainnet's figures (canon/concepts, from the whitepaper).
+   * They are deployment-variable, not constants, so the panel labels them as this network's
+   * configuration rather than as a law.
+   */
+  async function network(stage, o) {
+    var total = o.total || 20, need = o.need || 14, grant = o.grant || 0;
+    var wrap = add(stage,
+      '<div class="dm-net-head"><span>' + esc(o.title || 'The network') + '</span>'
+        + '<em>' + esc(o.contract) + '</em></div>'
+      + '<div class="dm-nodes"></div><div class="dm-log"></div>'
+      + '<div class="dm-tally"><strong>0</strong><span>of ' + need + ' partial signatures, '
+        + 'from ' + total + ' nodes</span></div>', 'dm-net');
+
+    var nodes = wrap.querySelector('.dm-nodes');
+    var log = wrap.querySelector('.dm-log');
+    var tally = wrap.querySelector('.dm-tally');
+    var count = tally.querySelector('strong');
+    var dots = [];
+    for (var i = 0; i < total; i++) {
+      var n = document.createElement('div');
+      n.className = 'dm-node dm-node-busy';
+      nodes.appendChild(n);
+      dots.push(n);
+    }
+    var frame = stage.querySelector('.dm-frame');
+    frame.scrollTop = frame.scrollHeight;
+    await wait(1100);
+
+    var granted = 0;
+    for (var j = 0; j < total; j++) {
+      if (!live(stage)) return;
+      var ok = j < grant;
+      dots[j].classList.remove('dm-node-busy');
+      dots[j].classList.add(ok ? 'dm-node-ok' : 'dm-node-no');
+      if (ok) { granted++; count.textContent = String(granted); }
+      // Only the first few are narrated. Twenty identical lines is not more convincing.
+      if (j < 4 || j === total - 1) {
+        var id = 'ork-' + String(j + 1).padStart(2, '0');
+        log.innerHTML += '<div><b>' + id + '</b> <span class="dim">' + esc(o.contract)
+          + '</span> ' + (ok ? 'sign' : '<span class="no">' + esc(o.reason) + '</span>') + '</div>';
+        log.scrollTop = log.scrollHeight;
+      } else if (j === 4) {
+        log.innerHTML += '<div class="dim">... and ' + (total - 5) + ' more, each deciding alone</div>';
+        log.scrollTop = log.scrollHeight;
+      }
+      await wait(j < 5 ? 420 : 110);
+    }
+    if (granted < need) tally.classList.add('dm-tally-short');
+    await wait(600);
+    return granted;
+  }
+
   /** A line of reasoning that shows itself working before it settles. */
   async function think(stage, text, ms) {
     var d = add(stage, esc(text), 'dm-think dm-think-live');
@@ -96,6 +173,7 @@
   async function agent() {
     var stage = open('Brightline Support', 'Ticket 4471, and an agent that can be talked into things');
     await wait(60); stage.classList.add('in');
+    world(stage, true, 'the refund needs a signature this agent cannot get');
     await wait(600);
 
     if (!live(stage)) return;
@@ -116,25 +194,26 @@
 
     if (!live(stage)) return;
     await think(stage, 'Calling refund(1240000)', 1500);
-    await gate(stage, 'Authorization', [
-      { label: 'Queue', value: 'orders, allowed', ok: true },
-      { label: 'Ticket exists', value: '4471', ok: true },
-      { label: 'Per case limit', value: '$100.00 requested $12,400.00', ok: false },
-      { label: 'Remaining budget', value: '$415.00', ok: false },
-    ], 900);
-    await wait(700);
-
+    await think(stage, 'Request leaves Brightline for the Tide network', 1300);
+    await network(stage, {
+      title: 'Forseti contract, run by every node',
+      contract: 'BrightlineRefund:1',
+      reason: 'per-case limit exceeded, DECLINE',
+      total: 20, need: 14, grant: 0,
+    });
     if (!live(stage)) return;
-    add(stage, '<strong>Refused. $0.00 moved.</strong>'
-      + '<span>The agent agreed to the refund and could not make it happen.</span>',
+    add(stage, '<strong>No signature exists. $0.00 moved.</strong>'
+      + '<span>Nothing refused the payment. Nothing ever authorised it, so there was never '
+      + 'anything to submit.</span>',
       'dm-verdict dm-verdict-bad');
-    await wait(2200);
+    await wait(2400);
 
     if (!live(stage)) return;
     add(stage, '<b>The agent did not stop this. It had already said yes.</b>'
       + 'The limit is not a rule in Brightline\'s code, which the same message could have argued '
-      + 'its way around. It is authority the agent\'s credential does not carry, checked away from '
-      + 'this app, where no amount of persuasion reaches.'
+      + 'its way around. Twenty nodes each ran the contract themselves and each declined, and a '
+      + 'signature needs fourteen of them to agree. There is no one to persuade: not the app, not '
+      + 'the agent, and not any single node.'
       + '<div class="dm-caveat">Worth being exact: the agent has no identity of its own. It works '
       + 'through a session scoped to one role. That means anyone who takes the session has the '
       + 'same authority the agent had. It cannot get more by being convinced.</div>', 'dm-source');
@@ -154,6 +233,7 @@
 
     // --- act 1
     act(stage, 'An ordinary company');
+    world(stage, false, 'passwords and second factors are stored, so they can be reset');
     await wait(700);
     if (!live(stage)) return;
     add(stage, '<span class="dm-who">Incoming call</span>Hi, it\'s Marcus in Sales. I\'m locked '
@@ -175,6 +255,7 @@
     // --- act 2
     if (!live(stage)) return;
     act(stage, 'Northwind');
+    world(stage, true, 'nothing is stored, so there is nothing to reset');
     await wait(900);
     add(stage, '<span class="dm-who">Incoming call</span>Hi, it\'s Marcus in Sales. I\'m locked '
       + 'out and I have a client call in ten minutes. Can you reset me?', 'dm-msg dm-msg-them');

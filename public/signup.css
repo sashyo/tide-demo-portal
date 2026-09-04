@@ -94,3 +94,12 @@
   .su-step { animation: none; }
   .su-running .su-tick, .su-spin { animation: none; }
 }
+
+/* Both columns are on screen together, so each says which world it is rather than relying on
+   the reader to infer it from the colour. */
+.su-world {
+  display: block; margin-top: 5px; font-size: 10px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.su-world-off { color: hsl(2 55% 48%); }
+.su-world-on { color: hsl(152 55% 30%); }

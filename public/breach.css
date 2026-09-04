@@ -96,3 +96,12 @@
   .bx-stage, .bx-frame { transition: none; }
   .bx-row, .bx-say { animation: none; }
 }
+
+/* Which world this act belongs to. People were losing track between the two, and a comparison
+   whose halves are indistinguishable reads as one system behaving inconsistently. */
+.bx-world {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  padding: 5px 11px; border-radius: 999px; border: 1px solid;
+}
+.bx-world-off { color: hsl(2 70% 74%); border-color: hsl(2 45% 42%); background: hsl(2 50% 18%); }
+.bx-world-on { color: hsl(150 55% 70%); border-color: hsl(150 40% 38%); background: hsl(150 40% 15%); }

@@ -108,3 +108,66 @@
   .dm-line, .dm-check, .dm-verdict { animation: none; }
   .dm-think-live::before { animation: none; }
 }
+
+/* --- the network deciding, rather than the app ----------------------------- */
+/* The flat checklist this replaces looked exactly like app code checking a rule, which is the
+   one impression the whole demo exists to remove. So the request visibly leaves, fans out to
+   the nodes, and each node answers on its own. */
+.dm-net { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.dm-net-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--sunk);
+}
+.dm-net-head em { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 12px; }
+
+/* Capped, and centred. At 1fr each the dots filled the panel and read as a row of buttons
+   rather than as a network of machines somewhere else. */
+.dm-nodes {
+  display: grid; grid-template-columns: repeat(10, 22px); gap: 10px;
+  padding: 18px 14px; justify-content: center;
+}
+@media (max-width: 520px) { .dm-nodes { grid-template-columns: repeat(5, 22px); } }
+.dm-node {
+  width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--edge);
+  background: var(--panel);
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.dm-node-busy { border-color: var(--accent); animation: dmPulse .8s ease-in-out infinite; }
+.dm-node-no { background: hsl(2 62% 52%); border-color: hsl(2 62% 52%); transform: scale(1.12); }
+.dm-node-ok { background: hsl(152 50% 40%); border-color: hsl(152 50% 40%); transform: scale(1.12); }
+
+.dm-log {
+  font-family: var(--mono); font-size: 11.5px; line-height: 1.75; color: var(--ink-2);
+  padding: 0 14px 12px; max-height: 128px; overflow-y: auto;
+}
+.dm-log div { animation: dmIn .18s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm-log b { color: var(--ink); font-weight: 600; }
+.dm-log .no { color: hsl(2 60% 45%); font-weight: 700; }
+.dm-log .dim { color: var(--ink-3); }
+
+.dm-tally {
+  display: flex; align-items: baseline; gap: 10px; padding: 12px 14px;
+  border-top: 1px solid var(--line); background: var(--panel-2); font-size: 13.5px;
+}
+.dm-tally strong { font-family: var(--mono); font-size: 18px; letter-spacing: -.02em; }
+.dm-tally-short strong { color: hsl(2 60% 45%); }
+.dm-tally span { color: var(--ink-2); }
+
+/* --- which world am I looking at ------------------------------------------- */
+/* The two-act demos were being misread: people lost track of whether the act on screen was
+   the ordinary system or ours, which makes the comparison worthless. So every act carries a
+   badge saying it outright, and the two are coloured as opposites. */
+.dm-world {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 6px 13px; border-radius: 999px; border: 1px solid;
+}
+.dm-world i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.dm-world-off {
+  color: hsl(2 55% 42%); background: hsl(2 55% 97%); border-color: hsl(2 45% 86%);
+}
+.dm-world-on {
+  color: hsl(152 55% 26%); background: hsl(152 45% 96.5%); border-color: hsl(152 40% 80%);
+}
+.dm-world em { font-style: normal; font-weight: 500; text-transform: none; letter-spacing: 0; opacity: .8; }
