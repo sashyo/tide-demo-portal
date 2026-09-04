@@ -1,4 +1,29 @@
+/**
+ * Marrindale Services: the BYOiD demo.
+ *
+ * The first version of this showed one sign-in working across three agencies, which is
+ * exactly what "sign in with Google" already does, so it demonstrated the misconception
+ * rather than the mechanism. BYOiD is not federated login. It is threshold password
+ * authentication: the password is checked across independent nodes, none of which learns it,
+ * and no password hash is stored anywhere.
+ *
+ * That claim is checkable, so this demo checks it in front of the visitor instead of
+ * asserting it. The identity page reads the realm's own user record live and shows what the
+ * credential store actually holds.
+ */
 import { AGENCIES, uses, type AgencyId } from './store.js';
+
+/** What the realm's identity store holds, read live. Null when it could not be read. */
+export type IdentityRecord = {
+  credentials: { type: string; createdDate: number | null }[];
+  hasPassword: boolean;
+  totp: boolean;
+  disableableCredentialTypes: string[];
+  requiredActions: string[];
+  vuid: string | null;
+  tideUserKey: string | null;
+  federatedIdentities: { identityProvider: string | null }[];
+};
 
 const esc = (s: unknown): string =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -28,8 +53,9 @@ export function directory(v: Viewer, flash?: string): string {
   return shell('Services', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
   <section class="card">
-    <h2>Services</h2>
-    <p class="sub">Three agencies. No accounts, no linking codes.</p>
+    <h2>Three agencies. Nothing to steal.</h2>
+    <p class="sub">You have no account at any of these, and none of them holds a password.
+      Use them, then look at what they actually store.</p>
     <div class="apps">
       ${AGENCIES.map((a) => {
         const used = mine.find((u) => u.agency === a.id);
@@ -43,7 +69,8 @@ export function directory(v: Viewer, flash?: string): string {
         </a>`;
       }).join('')}
     </div>
-    <p style="margin-top:20px"><a class="plain" href="/services/consent">What each agency knows about you</a></p>
+    <a class="btn-link" href="/services/identity" style="margin-top:20px;display:block">
+      <button class="btn-primary" type="button">Show me what Marrindale stores about me</button></a>
   </section>`, { href: '/', label: 'Portal' });
 }
 
@@ -73,28 +100,100 @@ export function agencyPage(v: Viewer, id: AgencyId, done?: string): string {
   </section>`, { href: '/services', label: 'Services' });
 }
 
-export function consent(v: Viewer, flash?: string): string {
+/**
+ * The centre of this demo: the realm's own answer to "what do you hold for this person".
+ *
+ * Read live from the identity store through the provisioner, because a demo that PRINTS
+ * "no password stored" is worth nothing. The visitor has seen that sentence on the website
+ * of every service that later leaked its password database.
+ */
+export function identityPage(v: Viewer, rec: IdentityRecord | null, flash?: string): string {
   const mine = uses(v.realm, v.person.sub);
+
+  const record = rec === null
+    ? `<div class="note note-warn"><strong>Could not read the record</strong>
+        The identity store did not answer. Nothing is being claimed here that was not read.</div>`
+    : `<pre class="dump">${esc(JSON.stringify({
+        credentials: rec.credentials,
+        totp: rec.totp,
+        disableableCredentialTypes: rec.disableableCredentialTypes,
+        requiredActions: rec.requiredActions,
+      }, null, 2))}</pre>
+      <div class="note ${rec.hasPassword ? 'note-err' : 'note-info'}">
+        <strong>${rec.hasPassword ? 'A password credential IS stored' : 'No password credential'}</strong>
+        ${rec.hasPassword
+          ? 'This realm is holding a password. That is not a Tide realm, or something reset it.'
+          : 'The store holds a Tide Authorization Key and nothing else. There is no hash, no salt and no reset token, because there is no password here to protect.'}
+      </div>`;
+
   return shell('Your identity', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
+
   <section class="card">
-    <h2>What each agency knows</h2>
+    <h2>Take the database</h2>
+    <p class="sub">This is Marrindale's entire credential record for you, read from the
+      identity store just now. Not a description of it.</p>
+    ${record}
+  </section>
+
+  <section class="card">
+    <h2>What that row would normally be</h2>
+    <p class="sub">The same record in a conventional system, and what leaks when it does.</p>
+    <pre class="dump dump-bad">${esc(`credentials: [
+  {
+    "type": "password",
+    "hashIterations": 210000,
+    "secretData": "{\"value\":\"kQ9x…\",\"salt\":\"7cF2…\"}",
+    "credentialData": "{\"algorithm\":\"pbkdf2-sha512\"}"
+  },
+  { "type": "otp", "secretData": "{\"value\":\"JBSWY3DPEH…\"}" }
+]`)}</pre>
+    <div class="note note-warn">
+      <strong>Offline from the moment it leaves</strong>
+      A stolen hash is guessed on the thief's own hardware, at their own pace, with no rate
+      limit and nobody watching. The reuse across other sites is what turns one breach into
+      several. Rotating it means every user changing their password.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>So what is checking the password?</h2>
+    <p class="sub">Independent nodes, none of which sees it.</p>
+    <ul class="discloses">
+      <li>Your password never leaves the browser as a password</li>
+      <li>Several nodes each apply one share of the check</li>
+      <li>None of them, and no server, ever holds enough to verify it alone</li>
+      <li>So there is no single place a password database could exist</li>
+    </ul>
+    <div class="note note-info">
+      <strong>This is not "sign in with Google"</strong>
+      Federated login moves the password to somebody else, who still stores a hash and can
+      still sign in as you. Here there is no such party. The identity is yours and no vendor
+      holds anything that can impersonate you.
+    </div>
+  </section>
+
+  ${rec && rec.vuid ? `<section class="card">
+    <h2>The identifier Marrindale got</h2>
+    <pre class="dump">${esc(rec.vuid)}</pre>
+    <p class="sub">A different vendor is given a different identifier for the same person, so
+      two vendors comparing records cannot tell you are one human. You are looking at one
+      vendor's, which is all this page is in a position to show you.</p>
+  </section>` : ''}
+
+  <section class="card">
+    <h2>Where you have been</h2>
     ${mine.length === 0
-      ? '<p class="sub">You have not used any service yet.</p>'
+      ? '<p class="sub">You have not used a service yet.</p>'
       : mine.map((u) => {
           const a = AGENCIES.find((x) => x.id === u.agency)!;
           return `<div class="appr" style="margin-bottom:12px">
             <div class="appr-who">${esc(a.icon)} ${esc(a.name)}</div>
             <div class="appr-meta">first used ${esc(when(u.firstUsed))}</div>
-            <div class="appr-meta">told: ${esc(a.discloses.join(' · '))}</div>
+            <div class="appr-meta">told: ${esc(a.discloses.join(' \u00b7 '))}</div>
             <form method="post" action="/services/consent/${esc(u.agency)}/revoke" style="margin-top:10px">
               <button class="btn-ghost" type="submit">Revoke</button></form>
           </div>`;
         }).join('')}
-
-    <div class="note note-warn" style="margin-top:20px">
-      <strong>Why the lists differ</strong>
-      Each agency was told only what its own job needed.
-    </div>
   </section>`, { href: '/services', label: 'Services' });
 }
