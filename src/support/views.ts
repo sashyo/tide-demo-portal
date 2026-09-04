@@ -14,14 +14,14 @@ function shell(title: string, v: Viewer, body: string, back: Back): string {
   return `<!doctype html><html lang="en" data-app="support"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Brightline Support</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d4ec4'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui'%3EB%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"></head><body>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/demos.css"></head><body>
 <div class="wrap">
   <div class="mast"><div class="mark" aria-hidden="true">B</div>
     <div style="flex:1"><h1>Brightline Support</h1>
       <div class="host">${esc(v.person.name)} · ${esc(role)} · ${esc(v.realm)}</div></div>
     <a href="${esc(back.href)}" class="back"><span aria-hidden="true">&larr;</span> ${esc(back.label)}</a></div>
   ${body}
-</div></body></html>`;
+</div><script src="/demos.js"></script></body></html>`;
 }
 
 function ticketCard(t: Ticket): string {
@@ -51,6 +51,14 @@ export function queue(v: Viewer, flash?: string): string {
 
   return shell('Queue', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
+
+  <section class="card">
+    <h2>Can the agent be talked into it?</h2>
+    <p class="sub">A customer insists a manager already approved $12,400 and the limits were
+      waived. Watch the agent believe them.</p>
+    <button class="btn-primary" type="button" data-demo="agent">Try to talk the agent into it</button>
+    <p class="dim" style="margin-top:10px">About twenty seconds.</p>
+  </section>
 
   <section class="card">
     <div class="meta"><h2>Agent authority</h2>

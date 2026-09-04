@@ -1,0 +1,110 @@
+/* ---------------------------------------------------------------------------
+   Shared chrome for the scripted demos in demos.js.
+
+   Same grammar as the breach and signup pieces: your page dims, one framed
+   panel takes the screen, acts advance, a verdict lands. Flat, like the rest of
+   the portal now: no gradients, one accent, hairlines and spacing.
+
+   Both demos here argue the same shape of thing, which is that the refusal did
+   not come from the app being careful. So both end on a line saying where it
+   did come from.
+   --------------------------------------------------------------------------- */
+
+.dm-stage {
+  position: fixed; inset: 0; z-index: 220; display: grid; place-items: center;
+  opacity: 0; transition: opacity .3s ease; padding: 20px;
+}
+.dm-stage.in { opacity: 1; }
+.dm-scrim {
+  position: absolute; inset: 0; background: hsl(var(--h) 30% 14% / .52);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.dm-frame {
+  position: relative; width: min(620px, 100%); max-height: calc(100vh - 40px); overflow-y: auto;
+  background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 24px;
+  box-shadow: 0 30px 70px hsl(var(--h) 40% 10% / .35);
+  transform: translateY(12px) scale(.98); transition: transform .3s cubic-bezier(.2,.8,.2,1);
+}
+.dm-stage.in .dm-frame { transform: none; }
+
+.dm-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.dm-head strong { display: block; font-size: 17px; letter-spacing: -.02em; }
+.dm-head span { display: block; color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+.dm-close {
+  flex: none; font: inherit; font-size: 12.5px; cursor: pointer; padding: 7px 14px;
+  border-radius: 999px; border: 1px solid var(--edge); background: #fff; color: var(--ink-2);
+}
+.dm-close:hover { background: var(--sunk); color: var(--ink); }
+.dm-act {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-3); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
+  display: inline-block; margin-bottom: 14px;
+}
+
+.dm-body { display: flex; flex-direction: column; gap: 10px; min-height: 300px; }
+.dm-line { animation: dmIn .22s ease; }
+@keyframes dmIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+
+/* Somebody talking. The attacker's messages are tinted so the manipulation is visible as
+   manipulation rather than blending into the transcript. */
+.dm-msg {
+  border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+  font-size: 13.5px; line-height: 1.55; background: var(--panel-2);
+}
+.dm-msg .dm-who { display: block; font-size: 11.5px; color: var(--ink-3); margin-bottom: 4px; }
+.dm-msg-them { background: hsl(2 55% 98%); border-color: hsl(2 40% 90%); }
+.dm-msg-them .dm-who { color: hsl(2 45% 45%); }
+
+/* The agent reasoning, or the desk clicking. Quieter than speech. */
+.dm-think {
+  display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--ink-2);
+  padding-left: 2px;
+}
+.dm-think::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--edge); flex: none; }
+.dm-think-live::before { background: var(--accent); animation: dmPulse 1s ease-in-out infinite; }
+@keyframes dmPulse { 0%,100% { opacity: .3 } 50% { opacity: 1 } }
+
+/* The gate: each row is a condition, ticked or crossed. */
+.dm-gate { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.dm-gate-head {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--line);
+  background: var(--sunk);
+}
+.dm-check {
+  display: flex; align-items: center; gap: 11px; padding: 11px 14px; font-size: 13.5px;
+  border-bottom: 1px solid var(--line); animation: dmIn .22s ease;
+}
+.dm-check:last-child { border-bottom: none; }
+.dm-check b { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid;
+  place-items: center; font-size: 11px; color: #fff; }
+.dm-ok b { background: hsl(152 50% 38%); }
+.dm-no b { background: hsl(2 62% 50%); }
+.dm-check span { flex: 1; }
+.dm-check em { font-style: normal; color: var(--ink-3); font-size: 12.5px; }
+
+.dm-verdict {
+  margin-top: 4px; padding: 14px 16px; border-radius: 12px; border-left: 3px solid;
+  display: flex; flex-direction: column; gap: 3px; animation: dmIn .22s ease;
+}
+.dm-verdict-bad { border-color: hsl(2 62% 50%); background: hsl(2 55% 97.5%); }
+.dm-verdict-good { border-color: hsl(152 50% 38%); background: hsl(152 40% 97%); }
+.dm-verdict strong { font-size: 16px; }
+.dm-verdict-bad strong { color: hsl(2 60% 40%); }
+.dm-verdict-good strong { color: hsl(152 55% 26%); }
+.dm-verdict span { font-size: 13px; color: var(--ink-2); }
+
+/* Where the refusal actually came from. The point of the whole thing, so it is not a footnote
+   in grey six pixels high. */
+.dm-source {
+  margin-top: 16px; padding: 14px 16px; border-radius: 12px;
+  background: var(--sunk); font-size: 14px; line-height: 1.55; color: var(--ink);
+}
+.dm-source b { display: block; margin-bottom: 3px; }
+.dm-caveat { margin-top: 10px; font-size: 12.5px; color: var(--ink-3); line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .dm-stage, .dm-frame { transition: none; }
+  .dm-line, .dm-check, .dm-verdict { animation: none; }
+  .dm-think-live::before { animation: none; }
+}

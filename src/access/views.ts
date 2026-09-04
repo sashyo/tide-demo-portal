@@ -15,14 +15,14 @@ function shell(title: string, v: Viewer, body: string, back: Back): string {
   return `<!doctype html><html lang="en" data-app="access"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Northwind Access</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d4ec4'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui'%3EA%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"></head><body>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/demos.css"></head><body>
 <div class="wrap">
   <div class="mast"><div class="mark" aria-hidden="true">A</div>
     <div style="flex:1"><h1>Northwind Access</h1>
       <div class="host">${esc(v.person.name)} · ${esc(role)} · ${esc(v.realm)}</div></div>
     <a href="${esc(back.href)}" class="back"><span aria-hidden="true">&larr;</span> ${esc(back.label)}</a></div>
   ${body}
-</div></body></html>`;
+</div><script src="/demos.js"></script></body></html>`;
 }
 
 const kindLabel = (m: Member): string =>
@@ -36,6 +36,14 @@ export function people(v: Viewer, flash?: string, error?: string): string {
   return shell('People', v, `
   ${flash ? `<div class="card"><div class="note note-info"><strong>Done</strong>${esc(flash)}</div></div>` : ''}
   ${error ? `<div class="card"><div class="note note-warn"><strong>Not done</strong>${esc(error)}</div></div>` : ''}
+
+  <section class="card">
+    <h2>Someone rings the service desk</h2>
+    <p class="sub">They say they are Marcus in Sales, they are locked out, and they have a
+      client call in ten minutes. At most companies this works.</p>
+    <button class="btn-primary" type="button" data-demo="desk">Take the call</button>
+    <p class="dim" style="margin-top:10px">About thirty seconds.</p>
+  </section>
 
   <section class="card">
     <h2>People</h2>
