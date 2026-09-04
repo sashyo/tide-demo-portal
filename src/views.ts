@@ -120,9 +120,12 @@ export function landing(apps: DemoApp[], error?: string): string {
 /** Prompt to finish (or redo) the signing ceremony. */
 function unsignedBanner(unsigned: string[]): string {
   if (unsigned.length === 0) return '';
-  return `<div class="note note-warn">
-    <strong>Setup incomplete</strong>
-    No signed policy for ${esc(unsigned.join(' or '))}.
+  // Not "incomplete". Nothing is broken: the workspace is built and this is the step that was
+  // always going to happen here, so saying it failed sends people looking for a fault.
+  return `<div class="note note-info">
+    <strong>One step left</strong>
+    The ${esc(unsigned.join(' and '))} ${unsigned.length > 1 ? 'policies' : 'policy'} still
+    need signing before the apps can encrypt or approve anything.
     <p style="margin-top:12px"><a class="btn-link" href="/onboard/setup"><button class="btn-ghost" type="button">Sign the policies</button></a></p>
   </div>`;
 }
@@ -249,7 +252,9 @@ export function setupPage(realm: string): string {
     <h1>workspace init</h1>
     <span class="tag">developer</span>
   </div>
-  <p class="dev-lede">Provisions cryptographic material for this workspace.</p>
+  <p class="dev-lede">Last step. The workspace itself is built; this signs the policies that
+    govern encryption and approvals, which needs your Tide account and so has to happen here
+    rather than in the provisioner.</p>
 
   <dl class="dev-facts">
     <dt>workspace</dt><dd>${esc(realm)}</dd>
