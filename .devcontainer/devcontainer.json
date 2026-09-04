@@ -31,7 +31,11 @@
     // and has to be recreated.
   },
 
-  "postCreateCommand": "npm install && npm run build",
+  // Split so a prebuild can cache the result. onCreateCommand and updateContentCommand both
+  // run while the prebuild is being built, so a Codespace started from a prebuild already has
+  // node_modules and the browser bundles and goes straight to postStartCommand.
+  "onCreateCommand": "npm ci",
+  "updateContentCommand": "npm run build",
 
   // Port 8090 must be public before the first sign-in. The journey leaves this origin three
   // times and comes back (provisioner, TideCloak, then the Tide enclave on the ORK), and a
@@ -47,6 +51,12 @@
       "extensions": ["dbaeumer.vscode-eslint"],
       "settings": {
         "terminal.integrated.defaultProfile.linux": "bash"
+
+        // Workspace trust is deliberately NOT disabled here. It would suppress the prompt for
+        // everyone who opens this public repository, not just for you, and the setting is
+        // application-scoped so VS Code would probably ignore it from a devcontainer anyway.
+        // Turn it off in your own User settings instead, where it syncs to every Codespace
+        // you open. See CODESPACES.md.
       }
     },
     "codespaces": {

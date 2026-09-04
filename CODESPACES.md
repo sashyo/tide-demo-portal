@@ -126,8 +126,8 @@ works against an unchanged provisioner.
 
 ## The first run
 
-1. Open the Codespace. `postCreateCommand` runs `npm install && npm run build`; the first
-   build takes a couple of minutes.
+1. Open the Codespace. `onCreateCommand` runs `npm ci` and `updateContentCommand` runs
+   `npm run build`. Both are skipped when you start from a prebuild; see below.
 2. `postStartCommand` sets port 8090 public and runs `npm start`. Read the banner: it prints
    the Portal URL it derived and warns about anything misconfigured.
 3. The port forwards and opens in a real browser tab (`onAutoForward: openBrowser`). Use that
@@ -155,6 +155,86 @@ old realm is not damaged, it is just not reachable from the new address.
 
 `data/` is gitignored, so realms and signed policies live only in that Codespace. Losing the
 Codespace loses the local record of the realm, not the realm itself.
+
+---
+
+## "Do you trust the authors of the files in this folder?"
+
+VS Code asks this before it will create a terminal, which means it blocks `postStartCommand`,
+which means the port is never made public and `npm start` never runs. Nothing works until it
+is answered.
+
+**Answer it once.** Click *Yes, I trust the authors*. It is your own repository, and the
+answer sticks for that Codespace.
+
+**To stop being asked at all**, put it in your own **User** settings rather than in this
+repository. User settings travel to every Codespace you open through Settings Sync:
+
+```json
+"security.workspace.trust.enabled": false
+```
+
+Or, to keep trust on but skip the prompt on startup:
+
+```json
+"security.workspace.trust.startupPrompt": "never"
+```
+
+This repository deliberately does not set either. Workspace trust is application-scoped, so a
+devcontainer setting would probably be ignored anyway, and shipping it would turn the prompt
+off for everyone who opens a public repo rather than just for you. That is your decision to
+make in your own editor, not ours to make on your behalf.
+
+---
+
+## Making it start faster
+
+Almost none of the wait is this project. Measured on a clean clone:
+
+```
+npm ci        0.8s
+npm run build 0.05s
+```
+
+The time goes into creating the container: pulling the base image and installing the
+`github-cli` feature. Nothing in the repository can shorten that, but a **prebuild** removes
+it, because GitHub builds the container ahead of time and hands you a snapshot.
+
+Turn it on once, in the repository: **Settings → Codespaces → Set up prebuild**, targeting the
+`main` branch. New Codespaces then start from the snapshot.
+
+The lifecycle commands are already split to take advantage of it:
+
+| Command | Runs during a prebuild | Runs on every start |
+|---|---|---|
+| `onCreateCommand` (`npm ci`) | yes | no |
+| `updateContentCommand` (`npm run build`) | yes | no |
+| `postStartCommand` (port + `npm start`) | no | yes |
+
+So a Codespace from a prebuild opens with `node_modules` and the browser bundles already
+present and goes straight to starting the server.
+
+Two things that are *not* worth doing: bundling `public/*.bundle.js` into git to skip the
+build (it is 50 milliseconds and a megabyte of churn per dependency bump), and dropping the
+`github-cli` feature to save the feature install (you would lose the automatic port
+visibility, which is the step most likely to cost you a confusing ten minutes).
+
+### Realm creation is a separate clock
+
+Creating the realm itself takes 65 to 95 seconds, and that is almost entirely TideCloak
+working, not this portal waiting. From real runs:
+
+```
+43s  activating the Tide license
+14s  enabling IGA
+ 5s  approving the admin user
+ 4s  creating the realm
+```
+
+The license step is consistently 43 to 45 seconds across every successful run, so it is
+server-side work rather than something retrying. Provisioning is also serialised, one realm at
+a time, so if `queued` is not zero on the provisioner's `/health` you are waiting behind
+somebody else as well.
 
 ---
 
