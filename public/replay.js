@@ -108,6 +108,9 @@
    */
   async function play(o) {
     var who = PEOPLE[o.name] || FALLBACK;
+    // A patient approving access to their own record is not a colleague, and the window
+    // saying so is most of the point of showing them at all.
+    if (o.role) who = Object.assign({}, who, { role: o.role });
     var stage = document.createElement('div');
     stage.className = 'sim-stage';
     stage.setAttribute('role', 'dialog');

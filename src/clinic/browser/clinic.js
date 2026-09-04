@@ -256,26 +256,34 @@ async function renderNotes(p) {
 
     el.innerHTML = `<div class="cipher">${escape(note.ciphertext.slice(0, 96))}…</div>
       <div class="req-row">
-        <span class="dim">Sealed — needs a second clinician</span>
+        <span class="dim">Sealed. The patient approves access</span>
         <button class="btn-ghost req-btn" type="button">Request access</button>
       </div>`;
     el.querySelector('.req-btn').addEventListener('click', (e) => request(e.target, el, p, note));
   }
 }
 
-/** Ask a colleague, watch them approve, then decrypt for real. */
+/**
+ * Ask the patient, watch them approve, then decrypt for real.
+ *
+ * The approver is the person the record is about. A second clinician signing off on reading
+ * your notes is the arrangement everyone already has and nobody consented to; what is worth
+ * demonstrating is consent from the subject, expressed as a signature rather than a checkbox
+ * in somebody else's database.
+ */
 async function request(btn, el, patient, note) {
   btn.disabled = true;
-  btn.textContent = 'Requesting…';
+  btn.textContent = 'Asking the patient…';
   try {
     await window.TideReplay.play({
-      name: 'Dr Ellis',
-      app: 'Northside Clinic',
-      ref: patient.name,
-      headline: 'Clinical notes',
-      question: `Release the clinical notes for ${patient.name} to ${IAMService.getName() || 'a colleague'}?`,
-      action: 'Approve access',
-      settled: 'Access granted',
+      name: patient.name,
+      role: 'Patient',
+      app: 'Northside Clinic - patient access',
+      ref: 'Your clinical notes',
+      headline: 'Share your clinical notes',
+      question: `${IAMService.getName() || 'A clinician'} at Northside Clinic is asking to open your clinical notes. Allow it?`,
+      action: 'Review request',
+      settled: 'You approved, signed in your enclave',
     });
     state.opened.add(note.id);
     await reveal(el, note);

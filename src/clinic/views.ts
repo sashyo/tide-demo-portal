@@ -48,6 +48,7 @@ export function page(realm: string): string {
       </div>
     </div>
     <div class="tri-net" id="tri-net" hidden></div>
+    <div class="tri-mine" id="tri-mine" hidden></div>
   </section>
 
   <section class="card" id="doctor-tools" hidden>

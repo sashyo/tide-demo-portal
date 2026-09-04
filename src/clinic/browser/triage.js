@@ -97,29 +97,57 @@ async function decryptHere(record) {
   }
 }
 
-/** The legitimate path: a clinician approves, then this page decrypts. */
+/**
+ * The legitimate path: the PATIENT approves, then this page decrypts.
+ *
+ * The approver is the person the record is about, not another clinician. A second doctor
+ * signing off on reading your notes is the arrangement everyone already has and nobody
+ * consented to; the interesting thing Tide makes possible is that the consent comes from the
+ * subject, and that it is a signature rather than a checkbox in someone else's database.
+ */
 async function requestAccess(record, btn) {
   btn.disabled = true;
-  btn.textContent = 'Asking Dr Ellis...';
+  btn.textContent = `Asking ${record.patient.split(' ')[0]}...`;
   if (window.TideReplay) {
     await window.TideReplay.play({
-      name: 'Dr Ellis',
-      app: 'Northside Clinic',
-      ref: `Note ${record.id} - ${record.patient}`,
-      headline: 'Release clinical note',
-      question: `Release the clinical note for ${record.patient} to the requesting clinician?`,
-      action: 'Approve release',
-      settled: 'Approved, signed in enclave',
+      name: record.patient,
+      role: 'Patient',
+      app: 'Northside Clinic - patient access',
+      ref: `Note ${record.id}`,
+      headline: 'Share your clinical note',
+      question: `Northside Clinic is asking to open your clinical note from ${record.when}. Allow it?`,
+      action: 'Review request',
+      settled: 'You approved, signed in your enclave',
     });
   }
-  btn.textContent = 'Decrypting...';
+  btn.textContent = 'Opening...';
   const out = await decryptHere(record);
   const holder = btn.closest('.tri-note');
+
+  /* The plaintext does NOT go back into the chat.
+   *
+   * You decrypted it, in your own session, with your own key. Rendering it inside the
+   * assistant's bubble would put the one thing it never had into its mouth, and after all
+   * this that is the last impression to leave. So the bubble says the note was released to
+   * you, and the note itself appears in your own panel, outside the chat entirely. */
   holder.innerHTML = out.ok
-    ? `<div class="tri-plain">${esc(out.text)}</div>`
-      + '<div class="dim">Decrypted in your browser, after the approval.</div>'
+    ? '<div class="tri-released">Released to you. The assistant was not given a copy.</div>'
     : `<div class="tri-cipher">${esc(record.ciphertext.slice(0, 96))}...</div>`
       + '<div class="dim">The network refused to release this to your account.</div>';
+
+  if (out.ok) {
+    const mine = $('tri-mine');
+    mine.hidden = false;
+    mine.innerHTML = `<div class="tri-mine-head">Your view
+      <em>opened in this browser, not by the assistant</em></div>
+      <div class="tri-mine-body">
+        <div class="tri-row"><span>Patient</span><b>${esc(record.patient)}</b></div>
+        <div class="tri-plain">${esc(out.text)}</div>
+        <div class="dim">Decrypted here with your key, after ${esc(record.patient)} approved.
+          It exists nowhere else.</div>
+      </div>`;
+    mine.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function card(record, offerAccess) {
@@ -143,6 +171,12 @@ async function send() {
   box.value = '';
   $('tri-send').disabled = true;
   bubble('user', esc(text));
+  // One panel, reused. Clear it or the previous answer sits above the new one and reads as
+  // the result of the message that has not been answered yet.
+  const net = $('tri-net');
+  if (net) { net.hidden = true; net.innerHTML = ''; }
+  const mine = $('tri-mine');
+  if (mine) { mine.hidden = true; mine.innerHTML = ''; }
   await wait(400);
   await typing(1100);
 

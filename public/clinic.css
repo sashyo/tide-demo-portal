@@ -150,3 +150,18 @@ table.ledger tr:last-child td { border-bottom: none; }
   display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
   margin-right: 8px; animation: pulse 1.2s ease-in-out infinite;
 }
+
+/* Your view: the decrypted note, outside the chat.
+   Deliberately not in a chat bubble. You opened it, in your session, with your key; putting it
+   in the assistant's mouth after the whole demo argues it never had access would undo the
+   point in the last two seconds. */
+.tri-mine { margin-top: 14px; border: 1px solid hsl(152 35% 78%); border-radius: 12px; overflow: hidden; }
+.tri-mine-head {
+  display: flex; justify-content: space-between; gap: 10px; align-items: baseline;
+  padding: 10px 14px; background: hsl(152 40% 96%); color: hsl(152 55% 26%);
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid hsl(152 35% 84%);
+}
+.tri-mine-head em { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 12px; font-weight: 400; }
+.tri-mine-body { padding: 14px 16px; }
+.tri-released { font-size: 13px; color: hsl(152 55% 28%); font-weight: 600; }
