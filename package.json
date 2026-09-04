@@ -1,0 +1,38 @@
+{
+  "name": "tide-demo-portal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Demo portal \u2014 visitors provision their own Tide realm, then sign in with it.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && npm run bundle",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "bundle": "esbuild src/clinic/browser/clinic.js --bundle --format=iife --outfile=public/clinic.bundle.js --minify && esbuild src/clinic/browser/setup.js --bundle --format=iife --outfile=public/setup.bundle.js --minify && esbuild src/clinic/browser/governance.js --bundle --format=iife --outfile=public/governance.bundle.js --minify && esbuild src/treasury/browser/approve.js --bundle --format=iife --outfile=public/approve.bundle.js --minify && esbuild src/clinic/browser/login.js --bundle --format=iife --outfile=public/login.bundle.js --minify"
+  },
+  "dependencies": {
+    "@tidecloak/js": "^0.14.20",
+    "@tideorg/js": "^0.14.25",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "heimdall-tide": "^0.14.20",
+    "helmet": "^8.0.0",
+    "jose": "^5.9.6",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.5",
+    "@types/qrcode": "^1.5.6",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

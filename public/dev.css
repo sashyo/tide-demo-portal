@@ -1,0 +1,94 @@
+/* ---------------------------------------------------------------------------
+   Initialisation — developer surface.
+
+   Deliberately not the product: the demo apps are metallic, coloured and
+   sans-serif; this is neutral, monospaced and flat. Someone who cannot tell
+   setup from product will click through an irreversible admin ceremony as if
+   it were a sign-up step.
+
+   Light only. No dark mode anywhere in this project.
+   --------------------------------------------------------------------------- */
+html[data-app="dev"] {
+  --d-bg:    #fbfbfc;
+  --d-panel: #fff;
+  --d-sunk:  #f5f6f8;
+  --d-ink:   #14161a;
+  --d-ink-2: #5a6068;
+  --d-ink-3: #8a9099;
+  --d-line:  #e4e6ea;
+  --d-line-2:#d2d5da;
+  --d-key:   #1f6feb;
+  --d-ok:    #1a7f4b;
+  --d-warn:  #9a5b00;
+  --d-err:   #b3261e;
+  --d-mono:  ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+html[data-app="dev"] body {
+  margin: 0; background: var(--d-bg); color: var(--d-ink);
+  font: 13.5px/1.65 var(--d-mono);
+  -webkit-font-smoothing: antialiased;
+}
+.dev-wrap { max-width: 680px; margin: 0 auto; padding: 40px 24px 80px; }
+
+.dev-top { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+.dev-top .sig { color: var(--d-key); }
+.dev-top h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+.dev-top .tag {
+  margin-left: auto; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--d-ink-3); border: 1px solid var(--d-line-2); padding: 2px 7px; border-radius: 3px;
+}
+.dev-lede { color: var(--d-ink-2); margin: 0 0 22px; font-size: 12.5px; }
+
+.dev-facts {
+  display: grid; grid-template-columns: auto 1fr; gap: 5px 18px; margin: 0 0 22px;
+  border: 1px solid var(--d-line); background: var(--d-panel); padding: 14px 16px; border-radius: 4px;
+}
+.dev-facts dt { color: var(--d-ink-3); font-size: 12px; }
+.dev-facts dd { margin: 0; font-size: 12.5px; word-break: break-all; }
+
+.dev-plan { list-style: none; margin: 0 0 20px; padding: 0; }
+.dev-plan li {
+  display: flex; gap: 10px; align-items: baseline; padding: 6px 0; color: var(--d-ink-3);
+  border-bottom: 1px solid var(--d-line);
+}
+.dev-plan li:last-child { border-bottom: none; }
+.dev-plan li::before { content: "·"; width: 10px; flex: none; text-align: center; }
+.dev-plan li[data-state="done"] { color: var(--d-ink); }
+.dev-plan li[data-state="done"]::before { content: "✓"; color: var(--d-ok); }
+.dev-plan li em { font-style: normal; color: var(--d-ink-3); font-size: 12px; margin-left: auto; }
+
+/* Log, not prose. */
+.dev-log {
+  border: 1px solid var(--d-line); background: var(--d-sunk); border-radius: 4px;
+  padding: 12px 14px; min-height: 78px; max-height: 220px; overflow-y: auto;
+  font-size: 12.5px; color: var(--d-ink-2); margin-bottom: 18px;
+}
+.dev-log div { padding: 1px 0; }
+.dev-log .t { color: var(--d-ink-3); margin-right: 8px; }
+.dev-log .ok { color: var(--d-ok); }
+.dev-log .warn { color: var(--d-warn); }
+.dev-log .err { color: var(--d-err); }
+
+.dev-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+html[data-app="dev"] button {
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  padding: 9px 15px; border-radius: 4px;
+  border: 1px solid var(--d-line-2); background: var(--d-panel); color: var(--d-ink);
+}
+html[data-app="dev"] button:hover:not(:disabled) { border-color: var(--d-ink-3); background: var(--d-sunk); }
+html[data-app="dev"] button:disabled { opacity: .5; cursor: not-allowed; }
+html[data-app="dev"] button.primary {
+  background: var(--d-key); border-color: var(--d-key); color: #fff; font-weight: 600;
+}
+html[data-app="dev"] button.primary:hover:not(:disabled) { background: #1a5fd0; border-color: #1a5fd0; }
+html[data-app="dev"] button:focus-visible { outline: 2px solid var(--d-key); outline-offset: 2px; }
+
+.dev-note {
+  border: 1px solid var(--d-line-2); border-left: 3px solid var(--d-warn);
+  background: var(--d-panel); padding: 11px 14px; border-radius: 4px; margin-top: 18px;
+  font-size: 12.5px; color: var(--d-ink-2);
+}
+.dev-note strong { display: block; color: var(--d-ink); font-weight: 600; margin-bottom: 2px; }
+.dev-note.err { border-left-color: var(--d-err); }
+.dev-foot { margin-top: 26px; font-size: 12px; color: var(--d-ink-3); }
+.dev-foot a { color: var(--d-key); }

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Browser bundles are build output (npm run bundle), not source. Roughly 1MB of minified
+# library code that would otherwise be re-committed on every dependency bump.
+public/*.bundle.js
+
+# Per-realm runtime state: adapter configs, signed clinic and payment policies, and the
+# tenant list. All of it belongs to whoever ran the portal, not to the repository. Only the
+# app catalogue is checked in, because the app needs it to render anything at all.
+data/*
+!data/demo-apps.json

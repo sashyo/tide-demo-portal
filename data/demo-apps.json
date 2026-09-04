@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Northwind Treasury",
+    "blurb": "Payment runs, suppliers, and a second signature on anything over $10,000.",
+    "icon": "\ud83c\udfe6",
+    "url": "/treasury"
+  },
+  {
+    "name": "Northside Clinic",
+    "blurb": "The front desk sees contact details. Clinical notes stay encrypted.",
+    "icon": "\ud83e\ude7a",
+    "url": "/clinic"
+  },
+  {
+    "name": "Brightline Support",
+    "blurb": "An AI agent working the queue, with a refund budget it cannot be talked out of.",
+    "icon": "\ud83c\udfa7",
+    "url": "/support"
+  },
+  {
+    "name": "Marrindale Services",
+    "blurb": "Three agencies, one identity. No accounts, no linking codes.",
+    "icon": "\ud83c\udfdb\ufe0f",
+    "url": "/services"
+  },
+  {
+    "name": "Northwind Access",
+    "blurb": "Starters, contractors and leavers, with no password to reset.",
+    "icon": "\ud83d\udd11",
+    "url": "/access"
+  }
+]
