@@ -9,11 +9,22 @@ const { Policy, ApprovalType, ExecutionType, BaseTideRequest } = Models;
  *
  * The ordering is not adjustable:
  *
- *   link account -> SIGN THE POLICIES -> grant tide-realm-admin -> flip to multiAdmin
+ *   link account -> GRANT tide-realm-admin -> publish contracts -> sign both policies
  *
- * Granting tide-realm-admin flips the realm from firstAdmin to multiAdmin, and that is a
- * one-way door: afterwards every governed change needs a fresh quorum ceremony, so a policy
- * signed later costs far more than one signed here.
+ * The grant comes first because signing a policy depends on it. The ceremony attaches the
+ * signed `tide-realm-admin` role policy to the approved request, and the ORKs check the
+ * signature against it. Run it while the realm is still firstAdmin and there is no such
+ * grant to check against, so the run dies at "Collecting threshold signatures" with nothing
+ * useful to say. That is the whitepaper's own account of the mode: firstAdmin exists for one
+ * purpose, establishing the first tide-realm-admin assignment, and "only long enough to
+ * eliminate itself". Policy signing is not that purpose.
+ *
+ * An earlier version of this file had the grant last and claimed the order was fixed by cost:
+ * the flip to multiAdmin is a one-way door, so a policy signed afterwards needs a fresh
+ * quorum. That reasoning does not survive contact with the arithmetic. The quorum is
+ * max(1, floor(admins x 0.7)), and a workspace that has just been created has one admin, so
+ * the threshold is one and the ceremony is the same single enclave approval either way. The
+ * ordering cost nothing and broke the run.
  *
  * Both policies go through a single requestTideOperatorApproval call because it accepts an
  * ARRAY of requests. Two sequential calls means two popups — and a second popup is far more
@@ -83,6 +94,15 @@ async function run() {
     const tc = IAMService.getTideCloakClient();
     if (!tc) throw new Error('Tide client not ready — reload and sign in again.');
 
+    // The flip, first. Everything below signs against the tide-realm-admin policy, which does
+    // not exist to sign against until this has committed.
+    say('Granting tide-realm-admin…');
+    const fin = await fetch('/onboard/finalize', { method: 'POST' });
+    const done = await fin.json();
+    if (!fin.ok || done.status === 'failed') throw new Error(done.error || 'Finalising failed.');
+    step('s-admin', 'done');
+    log('tide-realm-admin granted, workspace is now multiAdmin', 'ok');
+
     say('Publishing the encryption contracts…');
     const clinic = await buildPolicy(tc, '/clinic/api/policy/prepare', cfg.adapter.vendorId, {
       modelId: () => ['PolicyEnabledEncryption:1', 'PolicyEnabledDecryption:1'],
@@ -140,14 +160,6 @@ async function run() {
       step(stepId, 'done');
       log('policy stored: ' + id, 'ok');
     }
-
-    // Only now grant tide-realm-admin. This is the flip.
-    say('Finishing your realm…');
-    const fin = await fetch('/onboard/finalize', { method: 'POST' });
-    const done = await fin.json();
-    if (!fin.ok || done.status === 'failed') throw new Error(done.error || 'Finalising failed.');
-    step('s-admin', 'done');
-    log('tide-realm-admin granted — workspace is now multiAdmin', 'ok');
 
     say('done');
     location.href = '/';
