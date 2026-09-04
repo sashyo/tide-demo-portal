@@ -2,20 +2,20 @@
   "name": "Tide demo portal",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 
+  "features": {
+    // Provides `gh`, used below to set the port public. Not in the base image.
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
   "forwardPorts": [8090],
   "portsAttributes": {
     "8090": {
       "label": "Demo portal",
-      "onAutoForward": "openPreview",
 
-      // Public, because the sign-in journey leaves this origin and comes back to it: out to
-      // the provisioner, out to TideCloak, out to the Tide enclave on the ORK. A private
-      // forwarded port answers each of those returning redirects with a GitHub
-      // authentication page, and the callback never reaches the app.
-      //
-      // If GitHub still shows the port as Private after the container starts, set it by hand
-      // in the Ports panel: right-click the row, Port Visibility, Public. See CODESPACES.md.
-      "visibility": "public"
+      // A real browser tab, not the in-editor Simple Browser. Sign-in opens the Tide enclave
+      // in a popup and depends on window.opener surviving a cross-origin postMessage back,
+      // which the embedded browser does not reliably do.
+      "onAutoForward": "openBrowser"
     }
   },
 
@@ -32,11 +32,25 @@
   },
 
   "postCreateCommand": "npm install && npm run build",
-  "postAttachCommand": "npm start",
+
+  // Port 8090 must be public before the first sign-in. The journey leaves this origin three
+  // times and comes back (provisioner, TideCloak, then the Tide enclave on the ORK), and a
+  // private forwarded port answers each returning redirect with a GitHub authentication page,
+  // so the callback never arrives.
+  //
+  // This needs the `codespace` scope, which the built-in token does not always carry, so the
+  // failure is caught and explained rather than left to surface later as a login loop.
+  "postStartCommand": "{ if [ \"$CODESPACES\" = \"true\" ]; then gh codespace ports visibility 8090:public --codespace \"$CODESPACE_NAME\" || echo '!! Could not set port 8090 public automatically (gh CLI is missing the codespace scope). Open the Ports tab, right-click 8090, Port Visibility, Public.'; fi; } && npm start",
 
   "customizations": {
     "vscode": {
-      "extensions": ["dbaeumer.vscode-eslint"]
+      "extensions": ["dbaeumer.vscode-eslint"],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    },
+    "codespaces": {
+      "openFiles": ["CODESPACES.md"]
     }
   }
 }

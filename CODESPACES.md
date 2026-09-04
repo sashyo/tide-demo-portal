@@ -42,21 +42,30 @@ page looks signed out no matter how many times you sign in.
 
 ---
 
-## Set the port to Public
+## Port 8090 goes public automatically
 
-This is the one manual step, and skipping it produces the most confusing failure in the whole
-flow.
+This is the step that, if it does not happen, produces the most confusing failure in the whole
+flow. The sign-in journey leaves this origin three times and comes back: out to the
+provisioner, out to TideCloak, and out to the Tide enclave running on the ORK. A **private**
+forwarded port answers each returning redirect with a GitHub authentication page, so the
+callback never arrives and you land on a GitHub login screen part-way through signing in.
 
-The sign-in journey leaves this origin three times and comes back: out to the provisioner, out
-to TideCloak, and out to the Tide enclave running on the ORK. A **private** forwarded port
-answers each returning redirect with a GitHub authentication page, so the callback never
-reaches the app and you land on a GitHub login screen mid-sign-in.
+`postStartCommand` handles it:
 
-`.devcontainer/devcontainer.json` asks for public visibility up front. Confirm it took:
+```bash
+gh codespace ports visibility 8090:public --codespace "$CODESPACE_NAME"
+```
 
-1. Open the **Ports** panel (next to Terminal).
-2. Find port 8090. The Visibility column should read **Public**.
-3. If it reads Private: right-click the row → **Port Visibility** → **Public**.
+That call needs the `codespace` scope, which the built-in token does not always carry. When it
+fails, the terminal says so in as many words:
+
+```
+!! Could not set port 8090 public automatically (gh CLI is missing the codespace scope).
+   Open the Ports tab, right-click 8090, Port Visibility, Public.
+```
+
+That manual fallback is one right-click, and it is worth confirming the Visibility column
+reads **Public** before you start regardless.
 
 Public means anyone with the URL can open the portal. That is the intent for a demo. The realm
 behind it is yours, the data in it is whatever you type, and you can delete the Codespace when
@@ -119,11 +128,12 @@ works against an unchanged provisioner.
 
 1. Open the Codespace. `postCreateCommand` runs `npm install && npm run build`; the first
    build takes a couple of minutes.
-2. `postAttachCommand` runs `npm start`. Read the banner: it prints the Portal URL it derived
-   and warns about anything misconfigured.
-3. The port forwards and a preview opens. Prefer the real browser tab over the in-editor
-   preview: the sign-in flow opens the Tide enclave in a popup, and popups behave better in a
-   normal tab.
+2. `postStartCommand` sets port 8090 public and runs `npm start`. Read the banner: it prints
+   the Portal URL it derived and warns about anything misconfigured.
+3. The port forwards and opens in a real browser tab (`onAutoForward: openBrowser`). Use that
+   tab rather than the in-editor Simple Browser: sign-in opens the Tide enclave in a popup and
+   depends on `window.opener` surviving a cross-origin `postMessage` back, which the embedded
+   browser does not reliably do.
 4. Click **Create my workspace**. You go to the provisioner, fill in the form, and wait about
    two minutes while the realm is created, licensed, and IGA-enabled.
 5. Link your Tide account when prompted. This step is a human by design; the provisioner
@@ -150,8 +160,9 @@ Codespace loses the local record of the realm, not the realm itself.
 
 ## Troubleshooting
 
-**A GitHub sign-in page appears part-way through the Tide sign-in.** Port 8090 is Private.
-Set it Public in the Ports panel.
+**A GitHub sign-in page appears part-way through the Tide sign-in.** Port 8090 is Private:
+the automatic `gh codespace ports visibility` call failed, and the message saying so has
+scrolled past. Set it Public in the Ports panel.
 
 **"Invalid redirect_uri" or "unregistered redirect" after linking.** The realm was created
 against a different address than the one you are browsing. Check the Portal URL in the startup
@@ -159,12 +170,14 @@ banner against the address bar. If a leftover `PORTAL_URL` is overriding the Cod
 the banner says so on the next line. Fix it and create a new workspace; the existing realm
 cannot be repointed from here.
 
-**The enclave popup never opens.** Allow popups for `app.github.dev`, and use a real browser
-tab rather than the in-editor Simple Browser.
+**The enclave popup never opens.** Allow popups for `app.github.dev`. If you are in the
+in-editor Simple Browser rather than a real tab, open the forwarded URL in your browser
+instead; the popup's handle back to the opener does not survive the embedded one.
 
 **Provisioning stops at "waiting in the queue".** Expected. The provisioner creates one realm
 at a time on purpose, so you are behind someone else. It reports your position and continues
 on its own.
 
-**Everything 502s or the page never loads.** `npm start` is not running. Open a terminal and
-run it; `postAttachCommand` only fires when you attach.
+**Everything 502s or the page never loads.** `npm start` is not running. It is the tail of
+`postStartCommand`, so it starts with the Codespace and stops if you kill that terminal. Open
+a new one and run `npm start`.
