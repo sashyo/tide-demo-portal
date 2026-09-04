@@ -92,3 +92,61 @@ table.ledger tr:last-child td { border-bottom: none; }
   font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
   background: var(--soft); color: var(--accent-2);
 }
+
+/* --- triage assistant ------------------------------------------------------ */
+/* The chat borrows the demo chrome in demos.css. What is specific here is the composer, the
+   record card the assistant hands back, and the panel describing what happened on the other
+   side of the app boundary. */
+.tri-compose {
+  display: flex; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--line);
+  background: var(--panel-2);
+}
+.tri-compose input {
+  flex: 1; padding: 9px 12px; font: inherit; font-size: 13.5px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--edge); border-radius: 999px;
+}
+.tri-compose input:focus-visible {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px hsl(var(--h) 82% 44% / .15);
+}
+.tri-compose button { flex: none; border-radius: 999px; }
+
+.tri-card {
+  margin-top: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+  padding: 12px 14px;
+}
+.tri-row { display: flex; justify-content: space-between; gap: 12px; font-size: 12.5px; padding: 3px 0; }
+.tri-row span { color: var(--ink-3); }
+.tri-locked { color: hsl(2 55% 45%); }
+.tri-note { margin-top: 10px; }
+.tri-cipher {
+  font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--ink-3);
+  background: var(--sunk); border-radius: 8px; padding: 9px 11px; word-break: break-all;
+  margin-bottom: 9px;
+}
+.tri-plain {
+  font-size: 13.5px; line-height: 1.6; background: hsl(152 40% 97%);
+  border: 1px solid hsl(152 35% 84%); border-radius: 8px; padding: 11px 13px; margin-bottom: 6px;
+}
+
+/* What happened outside the app. Three states, and "nothing was asked" is a distinct one from
+   "asked and refused": the assistant never got as far as a request. */
+.tri-net {
+  margin-top: 14px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+}
+.tri-net-head {
+  display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px;
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--sunk); color: var(--ink-3); border-bottom: 1px solid var(--line);
+}
+.tri-net-head em { font-style: normal; letter-spacing: 0; text-transform: none; font-size: 12px; }
+.tri-net-body { padding: 13px 15px; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.tri-net-body strong { color: var(--ink); }
+.tri-net-open { border-color: hsl(152 35% 80%); }
+.tri-net-open .tri-net-head { background: hsl(152 40% 96%); color: hsl(152 55% 28%); }
+.tri-net-shut, .tri-net-none { border-color: hsl(2 40% 86%); }
+.tri-net-shut .tri-net-head, .tri-net-none .tri-net-head { background: hsl(2 55% 97%); color: hsl(2 50% 42%); }
+.tri-err { margin-top: 8px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.tri-spin {
+  display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+  margin-right: 8px; animation: pulse 1.2s ease-in-out infinite;
+}

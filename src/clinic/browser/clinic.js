@@ -1,4 +1,5 @@
 import { IAMService, initTide } from './tide.js';
+import { initTriage } from './triage.js';
 import { Models } from '@tideorg/js';
 import { PolicySignRequest } from 'heimdall-tide';
 
@@ -146,9 +147,49 @@ async function signPolicy() {
   }
 }
 
+/* Notes to start with, so the demo has something in it before anyone types.
+ *
+ * They are encrypted HERE, in the browser, with this realm's signed policy, exactly the way a
+ * clinician's own note would be. Shipping ready-made ciphertext in the repo was the obvious
+ * shortcut and the wrong one: it is encrypted to a key from some other realm, so it would
+ * never decrypt for anyone, and the good half of the demo would be a permanent failure. */
+const SEED = [
+  'Reports intermittent chest tightness on exertion, worse climbing stairs. No radiation to '
+    + 'the arm. Ex-smoker, stopped 2019. For ECG and bloods before the next appointment.',
+  'Six week postnatal review. Mood low, sleeping poorly, declined referral last visit but is '
+    + 'open to it now. Partner supportive. Follow up in a fortnight.',
+];
+
+let seeded = false;
+async function seedNotes(patients) {
+  if (seeded || !state.policy) return false;
+  seeded = true;
+  // Only when the practice is genuinely empty. Nobody wants their own notes joined by ours.
+  if (patients.some((p) => p.notes.length > 0)) return false;
+  try {
+    const [a, b] = await IAMService.doEncrypt(
+      SEED.map((text) => ({ data: text, tags: ['medical'] })), state.policy,
+    );
+    const targets = patients.slice(0, 2);
+    await Promise.all(targets.map((p, i) => fetch('/clinic/api/notes', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patientId: p.id, ciphertext: [a, b][i], by: 'Dr Ellis' }),
+    })));
+    return true;
+  } catch (err) {
+    // Seeding is a convenience. If it fails the app still works, so it does not take the
+    // page down with it; the queue is simply empty until somebody writes a note.
+    console.warn('[clinic] could not seed notes:', err);
+    return false;
+  }
+}
+
 // ------------------------------------------------------------------- notes
 async function render() {
-  const patients = await (await fetch('/clinic/api/patients')).json();
+  let patients = await (await fetch('/clinic/api/patients')).json();
+  if (await seedNotes(patients)) {
+    patients = await (await fetch('/clinic/api/patients')).json();
+  }
   const list = $('patients');
   list.replaceChildren();
 
@@ -170,7 +211,16 @@ async function render() {
   $('doctor-tools').hidden = state.role !== 'doctor' || !state.policy;
   const nb = $('note-btn');
   if (nb) nb.disabled = !state.policy;
+
+  // The assistant needs only the signed policy: everything it knows comes from the server,
+  // and the one thing it hands back that matters is ciphertext.
+  if (!triageStarted && state.policy) {
+    triageStarted = true;
+    initTriage(state.policy);
+  }
 }
+
+let triageStarted = false;
 
 /**
  * Notes stay sealed until a second clinician approves the access.

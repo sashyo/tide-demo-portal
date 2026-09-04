@@ -4,6 +4,7 @@ import { session } from '../session.js';
 import { get as getTenant } from '../tenants.js';
 import { CLINIC_CONTRACT, CONTRACT_ROLE, computeContractId } from './contract.js';
 import { getPolicy, savePolicy } from './policy.js';
+import { ask } from './agent.js';
 import { addNote, practice } from './store.js';
 import { page } from './views.js';
 
@@ -107,6 +108,22 @@ clinic.get('/api/patients', (req, res) => {
   const realm = realmOf(req, res);
   if (!realm) return res.status(404).json([]);
   res.json(practice(realm).patients);
+});
+
+/**
+ * The triage assistant.
+ *
+ * Deliberately server-side. A process here cannot obtain a Tide credential at all: PRISM needs
+ * the browser enclave, and ORK decryption is browser-and-SDK only. So the assistant holds no
+ * identity, holds no role, and has no decrypt path to be refused on. It answers with metadata
+ * and hands the note back in the only form it has ever had here, which is ciphertext.
+ */
+clinic.post('/api/assistant', (req, res) => {
+  const realm = realmOf(req, res);
+  if (!realm) return res.status(404).json({ error: 'No realm selected' });
+  const message = String(req.body?.message ?? '').slice(0, 500);
+  if (!message.trim()) return res.status(400).json({ error: 'message required' });
+  res.json(ask(message, practice(realm).patients));
 });
 
 clinic.post('/api/notes', (req, res) => {

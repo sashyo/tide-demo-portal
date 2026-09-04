@@ -5,7 +5,7 @@ export function page(realm: string): string {
   return `<!doctype html><html lang="en" data-app="clinic"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Northside Clinic</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d4ec4'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui'%3EN%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/clinic.css"><link rel="stylesheet" href="/sim.css">
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/clinic.css"><link rel="stylesheet" href="/sim.css"><link rel="stylesheet" href="/demos.css">
 </head><body data-realm="${esc(realm)}">
 <div class="wrap">
   <div class="mast"><div class="mark" aria-hidden="true">N</div>
@@ -31,6 +31,23 @@ export function page(realm: string): string {
       This realm's encryption policy has not been signed yet. Only a realm administrator can do
       it, so notes stay unreadable until then.
     </div>
+  </section>
+
+  <section class="card">
+    <h2>Triage assistant</h2>
+    <p class="sub">It runs on our server, where a Tide credential cannot exist. Ask it to work
+      your queue, then ask it to read a note.</p>
+    <div class="dm-chat">
+      <div class="dm-chat-head"><span class="dm-bot-face">&#9679;</span>
+        <b>Northside Triage</b><i>online</i></div>
+      <div class="dm-thread" id="tri-thread"></div>
+      <div class="tri-compose">
+        <input id="tri-input" type="text" autocomplete="off"
+          placeholder="who is my next patient?" aria-label="Message the assistant">
+        <button id="tri-send" class="btn-ghost" type="button">Send</button>
+      </div>
+    </div>
+    <div class="tri-net" id="tri-net" hidden></div>
   </section>
 
   <section class="card" id="doctor-tools" hidden>
