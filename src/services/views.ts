@@ -38,14 +38,14 @@ function shell(title: string, v: Viewer, body: string, back: Back): string {
   return `<!doctype html><html lang="en" data-app="services"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)} · Marrindale Services</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d4ec4'/%3E%3Ctext x='16' y='23' font-size='18' font-weight='900' fill='white' text-anchor='middle' font-family='system-ui'%3EM%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"></head><body>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/treasury.css"><link rel="stylesheet" href="/breach.css"></head><body>
 <div class="wrap">
   <div class="mast"><div class="mark" aria-hidden="true">M</div>
     <div style="flex:1"><h1>Marrindale Services</h1>
       <div class="host">${esc(v.person.name)} · no account created</div></div>
     <a href="${esc(back.href)}" class="back"><span aria-hidden="true">&larr;</span> ${esc(back.label)}</a></div>
   ${body}
-</div></body></html>`;
+</div><script src="/breach.js"></script></body></html>`;
 }
 
 export function directory(v: Viewer, flash?: string): string {
@@ -161,8 +161,17 @@ export function identityPage(v: Viewer, rec: IdentityRecord | null, flash?: stri
 
   <section class="card">
     <h2>Someone steals Marrindale's files tonight</h2>
-    <p class="sub">What do they walk away with? Here is your file, next to the same file at an
-      ordinary service.</p>
+    <p class="sub">Watch the same thief run the same attack twice: once on an ordinary service,
+      then on this one.</p>
+    ${rec === null ? unreadable : `<button class="btn-primary" type="button" data-breach
+      data-has-password="${rec.hasPassword}" data-totp="${rec.totp}"
+      data-service="Marrindale">Steal the database</button>
+    <p class="dim" style="margin-top:10px">Takes about half a minute. Nothing real is attacked.</p>`}
+  </section>
+
+  <section class="card">
+    <h2>What the thief walked away with</h2>
+    <p class="sub">Your file at an ordinary service, and your file here.</p>
     ${stolen}
   </section>
 
