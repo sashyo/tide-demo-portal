@@ -103,6 +103,34 @@ async function run() {
     step('s-admin', 'done');
     log('tide-realm-admin granted, workspace is now multiAdmin', 'ok');
 
+    /* The token in this browser was minted before the grant, so it does not carry the role.
+     *
+     * The ORKs re-derive a JWT's claims from the current user context rather than trusting
+     * what the app sends, so a token issued a minute ago describes a user who was not an
+     * admin yet. Signing a policy with it fails at the threshold step with nothing useful to
+     * say, which is what it did. Force a refresh and check the role actually arrived instead
+     * of assuming it.
+     *
+     * The retry is for propagation: the grant is a governed change and the commit has to land
+     * before a refreshed token reflects it. */
+    say('Refreshing your token with the new role…');
+    let isAdmin = false;
+    for (let attempt = 1; attempt <= 4 && !isAdmin; attempt++) {
+      try {
+        await IAMService.updateToken();
+      } catch (err) {
+        clientLog('warn', 'token refresh failed on attempt ' + attempt, String(err));
+      }
+      isAdmin = IAMService.hasRealmRole('tide-realm-admin');
+      if (!isAdmin) await new Promise((r) => setTimeout(r, attempt * 1200));
+    }
+    if (!isAdmin) {
+      throw new Error('Your session still does not carry tide-realm-admin. The grant went '
+        + 'through, so signing out and back in should pick it up, and setup will resume from '
+        + 'here.');
+    }
+    log('token refreshed, now carries tide-realm-admin', 'ok');
+
     say('Publishing the encryption contracts…');
     const clinic = await buildPolicy(tc, '/clinic/api/policy/prepare', cfg.adapter.vendorId, {
       modelId: () => ['PolicyEnabledEncryption:1', 'PolicyEnabledDecryption:1'],
