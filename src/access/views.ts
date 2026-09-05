@@ -22,7 +22,7 @@ function shell(title: string, v: Viewer, body: string, back: Back): string {
       <div class="host">${esc(v.person.name)} · ${esc(role)} · ${esc(v.realm)}</div></div>
     <a href="${esc(back.href)}" class="back"><span aria-hidden="true">&larr;</span> ${esc(back.label)}</a></div>
   ${body}
-</div><script src="/demos.js"></script></body></html>`;
+</div><script src="/demos.js"></script><script src="/access.js"></script></body></html>`;
 }
 
 const kindLabel = (m: Member): string =>
@@ -38,11 +38,21 @@ export function people(v: Viewer, flash?: string, error?: string): string {
   ${error ? `<div class="card"><div class="note note-warn"><strong>Not done</strong>${esc(error)}</div></div>` : ''}
 
   <section class="card">
-    <h2>Someone rings the service desk</h2>
-    <p class="sub">They say they are Marcus in Sales, they are locked out, and they have a
-      client call in ten minutes. At most companies this works.</p>
-    <button class="btn-primary" type="button" data-demo="desk">Take the call</button>
-    <p class="dim" style="margin-top:10px">About thirty seconds.</p>
+    <h2>Give yourself production access</h2>
+    <p class="sub">You are the administrator of this workspace and you hold every role in it
+      except one. Ask for that one and watch what the workspace does with the request. This is
+      live: it files a real change request against your own account.</p>
+    <button class="btn-primary" type="button" data-breakglass>Request break-glass access</button>
+    <div class="ax-log" id="ax-log"></div>
+    <div class="ax-verdict" id="ax-verdict" hidden></div>
+  </section>
+
+  <section class="card">
+    <h2>And this is why the desk cannot just do it</h2>
+    <p class="sub">Someone rings up. They say they are Marcus in Sales, they are locked out, and
+      they have a client call in ten minutes. At most companies this works.</p>
+    <button class="btn-ghost" type="button" data-demo="desk">Take the call</button>
+    <p class="dim" style="margin-top:10px">About thirty seconds, and entirely staged.</p>
   </section>
 
   <section class="card">

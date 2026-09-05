@@ -106,6 +106,39 @@ access.post('/api/grant', async (req, res) => {
 });
 
 /**
+ * Ask for the break-glass role, for the person currently signed in.
+ *
+ * Real, not staged: this files an IGA change request against the caller's own TideCloak user,
+ * and the 202 that comes back means filed rather than applied. The caller then cannot approve
+ * it, because the change needs a signature from somebody who did not raise it, and they are
+ * the only administrator the workspace has.
+ *
+ * The role is chosen so that this is true. access-break-glass is left out of the default
+ * composite when a workspace is created; every other role is handed out on sight so the demos
+ * work without an admin in the loop, and asking for a role you already hold proves nothing.
+ */
+access.post('/api/break-glass', async (req, res) => {
+  const v: Viewer = (req as any).viewer;
+  const s = session(req, res);
+  const userId = s.user?.sub;
+  if (!userId) return res.status(401).json({ error: 'Not signed in.' });
+  try {
+    const r = await fetch(
+      `${config.provisionerUrl}/api/realms/${encodeURIComponent(v.realm)}/users/${encodeURIComponent(userId)}/roles`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'access-break-glass' }),
+      },
+    );
+    const out = (await r.json()) as Record<string, unknown>;
+    res.status(r.status).json(out);
+  } catch (err) {
+    res.status(502).json({ error: (err as Error).message });
+  }
+});
+
+/**
  * The only thing the service desk can actually do. Ending sessions cannot let anybody IN, which
  * is what makes it safe to expose to a phone call — unlike a password or MFA reset.
  */

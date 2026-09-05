@@ -140,3 +140,28 @@ table.ledger tr:last-child td { border-bottom: none; }
   background: hsl(152 40% 92%); color: hsl(152 55% 26%); padding: 2px 7px; border-radius: 999px;
 }
 .steal-prov { margin-top: 8px; color: var(--ink-3); font-size: 11.5px; }
+
+/* --- access: the live grant panel ------------------------------------------ */
+/* A running log rather than a result, because the sequence is the argument: filed, pending,
+   and then refused to the person who filed it. */
+.ax-log:empty { display: none; }
+.ax-log {
+  font-family: var(--mono); font-size: 12px; line-height: 1.7; margin-top: 14px;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; max-height: 190px; overflow-y: auto;
+}
+.ax-line { animation: dmIn .2s ease; }
+.ax-line b { color: var(--ink); }
+.ax-ok { color: hsl(152 50% 32%); }
+.ax-bad { color: hsl(2 60% 45%); }
+.ax-dim { color: var(--ink-3); }
+.ax-verdict {
+  margin-top: 14px; padding: 14px 16px; border-radius: 12px; border-left: 3px solid;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ax-verdict-good { border-color: hsl(152 50% 38%); background: hsl(152 40% 97%); }
+.ax-verdict-bad { border-color: hsl(2 62% 50%); background: hsl(2 55% 97.5%); }
+.ax-verdict strong { font-size: 15.5px; }
+.ax-verdict-good strong { color: hsl(152 55% 26%); }
+.ax-verdict-bad strong { color: hsl(2 60% 40%); }
+.ax-verdict span { font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
