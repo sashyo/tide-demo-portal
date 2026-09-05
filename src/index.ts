@@ -279,8 +279,17 @@ app.get('/onboard/complete', async (req, res) => {
     s.user = undefined;
     console.log(`[onboard] realm ${tenant.realm} registered (client ${tenant.clientId})`);
 
-    // Already finished (e.g. a reload): nothing left to set up.
-    if (job.status === 'ready') return res.redirect('/');
+    /* Straight to the signing page unless there is genuinely nothing to sign.
+     *
+     * This used to key off job.status === 'ready', which meant "phase B is done". That was a
+     * reasonable proxy while the app granted tide-realm-admin itself, because the job was
+     * still mid-flight on arrival. The provisioner finishes phase B before handing over now,
+     * so the status is ALWAYS ready here, and the check sent every new workspace to the
+     * landing page to read "one step left" instead of to the step.
+     *
+     * The honest question is whether the policies are signed, so ask that. */
+    const signed = Boolean(getPolicy(tenant.realm, 'clinic')) && Boolean(getPolicy(tenant.realm, 'payment'));
+    if (signed) return res.redirect('/');
 
     res.redirect('/onboard/setup');
   } catch (err) {
